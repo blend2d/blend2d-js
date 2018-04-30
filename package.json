@@ -1,30 +1,22 @@
 {
-  "name": "b2d",
+  "name": "b2djs",
   "version": "0.0.1",
 
-  "description": "Blend2D bindings for node.js - high-performance and fully asynchronous 2D engine",
-  "keywords": ["2d"],
+  "description": "Blend2D bindings for node.js",
+  "keywords": [],
 
-  "homepage": "http://blend2d.com",
+  "homepage": "https://github.com/blend2d/b2djs",
   "bugs": {
-    "url": "https://github.com/blend2d/b2d-node/issues"
+    "url": "https://github.com/blend2d/b2djs/issues"
   },
 
-  "contributors": [{
-    "name" : "Petr Kobalicek",
-    "email": "kobalicek.petr@gmail.com",
-    "url"  : "http://kobalicek.com"
-  }],
-
   "license": "Zlib",
-
   "main": "./index.js",
-
   "dependencies": {},
 
   "repository": {
     "type": "git",
-    "url": "git://github.com/blend2d/b2d-node.git"
+    "url": "git://github.com/blend2d/b2djs.git"
   },
 
   "scripts": {
