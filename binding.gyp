@@ -2,12 +2,12 @@
   "target_defaults": {
     "default_configuration": "Release",
     "configurations": {
-      "Debug"  : { "defines": ["_DEBUG"] },
       "Release": { "defines": ["NDEBUG"] }
     },
     "conditions": [
       ["OS=='linux' or OS=='mac'", {
-        "cflags": ["-fvisibility=hidden"]
+        "cflags_cc": ["-std=c++17", "-fvisibility=hidden"],
+        "cflags_cc!": ["-std=gnu++1y"]
       }]
     ]
   },
@@ -19,23 +19,23 @@
     ],
 
     "include_dirs": [
-      "../b2d/src"
+      "../blend2d/src"
     ],
 
     "conditions": [
       ["OS == 'win'", {
         "library_dirs": [
-          "../b2d/build_vs2017_x64/Release",
-          "../b2d/build_vs2017_x64/Debug"
+          "../blend2d/build_vs2017_x64/Release",
+          "../blend2d/build_vs2017_x64/Debug"
         ],
         "libraries": [
-          "-lb2d"
+          "-lblend2d"
         ]
       }, {
         "libraries": [
-          "-L../../b2d/build_rel",
-          "-L../../b2d/build_dbg",
-          "-lb2d"
+          "-L../../blend2d/build_rel",
+          "-L../../blend2d/build_dbg",
+          "-lblend2d"
         ]
       }]
     ]

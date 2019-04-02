@@ -4,12 +4,10 @@
 // [License]
 // Public Domain <http://unlicense.org>
 
-// [Guard]
 #ifndef _B2DJS_H
 #define _B2DJS_H
 
-// [Dependencies]
-#include <b2d/b2d.h>
+#include <blend2d.h>
 
 #include "../njs/njs.h"
 #include "../njs/njs-extension-enum.h"
@@ -23,159 +21,127 @@ namespace b2djs {
 #define B2DJS_API
 
 // ============================================================================
-// [b2djs::JSModule]
+// [b2djs::Module]
 // ============================================================================
 
-struct JSModule {
+struct Module {
   enum : uint32_t { kBaseTag = 0x3FFFAA00u };
 };
 
 // ============================================================================
-// [b2djs::JSCookie]
+// [b2djs::ContextCookieWrap]
 // ============================================================================
 
-struct JSCookie {
-  NJS_BASE_CLASS(JSCookie, "Cookie", JSModule::kBaseTag + 0)
+struct ContextCookieWrap {
+  NJS_BASE_CLASS(ContextCookieWrap, "Cookie", Module::kBaseTag + 0)
 
-  NJS_INLINE JSCookie() noexcept : _obj() {}
-  NJS_INLINE JSCookie(const b2d::Cookie& other) noexcept : _obj(other) {}
-  NJS_INLINE ~JSCookie() noexcept {}
+  NJS_INLINE ContextCookieWrap() noexcept : _obj() {}
+  NJS_INLINE ContextCookieWrap(const BLContextCookie& other) noexcept : _obj(other) {}
+  NJS_INLINE ~ContextCookieWrap() noexcept {}
 
-  b2d::Cookie _obj;
+  BLContextCookie _obj;
 };
 
 // ============================================================================
-// [b2djs::JSImage]
+// [b2djs::ImageWrap]
 // ============================================================================
 
-struct JSImage {
-  NJS_BASE_CLASS(JSImage, "Image", JSModule::kBaseTag + 1)
+struct ImageWrap {
+  NJS_BASE_CLASS(ImageWrap, "Image", Module::kBaseTag + 1)
 
-  NJS_INLINE JSImage() noexcept : _obj() {}
-  NJS_INLINE JSImage(const b2d::Image& img) noexcept : _obj(img) {}
-  NJS_INLINE ~JSImage() noexcept {}
+  NJS_INLINE ImageWrap() noexcept : _obj() {}
+  NJS_INLINE ImageWrap(const BLImage& img) noexcept : _obj(img) {}
+  NJS_INLINE ~ImageWrap() noexcept {}
 
-  b2d::Image _obj;
+  BLImage _obj;
 };
 
 // ============================================================================
-// [b2djs::JSPath2D]
+// [b2djs::PathWrap]
 // ============================================================================
 
-struct JSPath2D {
-  NJS_BASE_CLASS(JSPath2D, "Path2D", JSModule::kBaseTag + 2)
+struct PathWrap {
+  NJS_BASE_CLASS(PathWrap, "Path", Module::kBaseTag + 2)
 
-  NJS_INLINE JSPath2D() noexcept {}
-  NJS_INLINE explicit JSPath2D(const b2d::Path2D& obj) noexcept : _obj(obj) {}
-  NJS_INLINE ~JSPath2D() noexcept {}
+  NJS_INLINE PathWrap() noexcept {}
+  NJS_INLINE explicit PathWrap(const BLPath& obj) noexcept : _obj(obj) {}
+  NJS_INLINE ~PathWrap() noexcept {}
 
-  b2d::Path2D _obj;
+  BLPath _obj;
 };
 
 // ============================================================================
-// [b2djs::JSPattern]
+// [b2djs::PatternWrap]
 // ============================================================================
 
-struct JSPattern {
-  NJS_BASE_CLASS(JSPattern, "Pattern", JSModule::kBaseTag + 3)
+struct PatternWrap {
+  NJS_BASE_CLASS(PatternWrap, "Pattern", Module::kBaseTag + 3)
 
-  NJS_INLINE JSPattern() noexcept {}
-  NJS_INLINE explicit JSPattern(const b2d::Pattern& obj) noexcept : _obj(obj) {}
-  NJS_INLINE ~JSPattern() noexcept {}
+  NJS_INLINE PatternWrap() noexcept {}
+  NJS_INLINE explicit PatternWrap(const BLPattern& obj) noexcept : _obj(obj) {}
+  NJS_INLINE ~PatternWrap() noexcept {}
 
-  b2d::Pattern _obj;
+  BLPattern _obj;
 };
 
 // ============================================================================
-// [b2djs::JSGradient]
+// [b2djs::GradientWrap]
 // ============================================================================
 
-struct JSGradient {
-  NJS_BASE_CLASS(JSGradient, "Gradient", JSModule::kBaseTag + 4)
+struct GradientWrap {
+  NJS_BASE_CLASS(GradientWrap, "Gradient", Module::kBaseTag + 4)
 
-  NJS_INLINE JSGradient(uint32_t typeId, double v0, double v1, double v2, double v3, double v4 = 0.0, double v5 = 0.0) noexcept
-    : _obj(typeId, v0, v1, v2, v3, v4, v5) {}
-  NJS_INLINE ~JSGradient() noexcept {}
+  NJS_INLINE GradientWrap() noexcept
+    : _obj() {}
+  NJS_INLINE GradientWrap(uint32_t type, const double* values) noexcept
+    : _obj(type, values) {}
+  NJS_INLINE ~GradientWrap() noexcept {}
 
-  b2d::Gradient _obj;
+  BLGradient _obj;
 };
 
 // ============================================================================
-// [b2djs::JSLinearGradient]
+// [b2djs::FontFaceWrap]
 // ============================================================================
 
-struct JSLinearGradient : public JSGradient {
-  NJS_INHERIT_CLASS(JSLinearGradient, JSGradient, "LinearGradient")
+struct FontFaceWrap {
+  NJS_BASE_CLASS(FontFaceWrap, "FontFace", Module::kBaseTag + 5)
 
-  NJS_INLINE JSLinearGradient(double x0 = 0.0, double y0 = 0.0, double x1 = 0.0, double y1 = 0.0) noexcept
-    : JSGradient(b2d::Any::kTypeIdLinearGradient, x0, y0, x1, y1) {}
+  NJS_INLINE FontFaceWrap() noexcept {}
+  NJS_INLINE explicit FontFaceWrap(BLFontFace& obj) noexcept : _obj(obj) {}
+  NJS_INLINE ~FontFaceWrap() noexcept {}
+
+  BLFontFace _obj;
 };
 
 // ============================================================================
-// [b2djs::JSRadialGradient]
+// [b2djs::FontWrap]
 // ============================================================================
 
-struct JSRadialGradient : public JSGradient {
-  NJS_INHERIT_CLASS(JSRadialGradient, JSGradient, "RadialGradient")
+struct FontWrap {
+  NJS_BASE_CLASS(FontWrap, "Font", Module::kBaseTag + 6)
 
-  NJS_INLINE JSRadialGradient(double cx = 0.0, double cy = 0.0, double fx = 0.0, double fy = 0.0, double cr = 0.0) noexcept
-    : JSGradient(b2d::Any::kTypeIdRadialGradient, cx, cy, fx, fy, cr) {}
+  NJS_INLINE FontWrap() noexcept {}
+  NJS_INLINE explicit FontWrap(BLFont& obj) noexcept : _obj(obj) {}
+  NJS_INLINE ~FontWrap() noexcept {}
+
+  BLFont _obj;
 };
 
 // ============================================================================
-// [b2djs::JSConicalGradient]
+// [b2djs::ContextWrap]
 // ============================================================================
 
-struct JSConicalGradient : public JSGradient {
-  NJS_INHERIT_CLASS(JSConicalGradient, JSGradient, "ConicalGradient")
+struct ContextWrap {
+  NJS_BASE_CLASS(ContextWrap, "Context", Module::kBaseTag + 7)
 
-  NJS_INLINE JSConicalGradient(double cx = 0.0, double cy = 0.0, double angle = 0.0) noexcept
-    : JSGradient(b2d::Any::kTypeIdConicalGradient, cx, cy, angle, 0.0) {}
-};
+  NJS_INLINE ContextWrap() noexcept {}
+  NJS_INLINE explicit ContextWrap(BLImage& obj) noexcept : _obj(obj) {}
+  NJS_INLINE ~ContextWrap() noexcept {}
 
-// ============================================================================
-// [b2djs::JSFontFace]
-// ============================================================================
-
-struct JSFontFace {
-  NJS_BASE_CLASS(JSFontFace, "FontFace", JSModule::kBaseTag + 5)
-
-  NJS_INLINE JSFontFace() noexcept {}
-  NJS_INLINE explicit JSFontFace(b2d::FontFace& obj) noexcept : _obj(obj) {}
-  NJS_INLINE ~JSFontFace() noexcept {}
-
-  b2d::FontFace _obj;
-};
-
-// ============================================================================
-// [b2djs::JSFont]
-// ============================================================================
-
-struct JSFont {
-  NJS_BASE_CLASS(JSFont, "Font", JSModule::kBaseTag + 6)
-
-  NJS_INLINE JSFont() noexcept {}
-  NJS_INLINE explicit JSFont(b2d::Font& obj) noexcept : _obj(obj) {}
-  NJS_INLINE ~JSFont() noexcept {}
-
-  b2d::Font _obj;
-};
-
-// ============================================================================
-// [b2djs::JSContext2D]
-// ============================================================================
-
-struct JSContext2D {
-  NJS_BASE_CLASS(JSContext2D, "Context2D", JSModule::kBaseTag + 7)
-
-  NJS_INLINE JSContext2D() noexcept {}
-  NJS_INLINE explicit JSContext2D(b2d::Image& obj) noexcept : _obj(obj) {}
-  NJS_INLINE ~JSContext2D() noexcept {}
-
-  b2d::Context2D _obj;
+  BLContext _obj;
 };
 
 } // b2d namespace
 
-// [Guard]
 #endif // _B2DJS_H

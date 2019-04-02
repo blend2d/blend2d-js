@@ -11,35 +11,40 @@
 #include <algorithm>
 #include "./b2djs.h"
 
+#define ARRAY_SIZE(X) uint32_t(sizeof(X) / sizeof(X[0]))
+
 namespace b2djs {
 
 // ============================================================================
 // [Globals]
 // ============================================================================
 
-NJS_ENUM(Enum_Context2D_ImplType,
-  b2d::Context2D::kImplTypeNone,
-  b2d::Context2D::kImplTypeCount,
+NJS_ENUM(Enum_ContextType, 0, BL_CONTEXT_TYPE_COUNT - 1,
   "null\0"
-  "pipe2d\0");
+  "dummy\0"
+  "raster\0"
+  "raster-async\0");
 
-NJS_ENUM(Enum_CompOp_Id,
-  b2d::CompOp::kSrc,
-  b2d::CompOp::kExclusion,
-  "src\0"
+NJS_ENUM(Enum_FontTag_Category,
+  0, 2,
+  "table\0"
+  "script\0"
+  "feature\0");
+
+NJS_ENUM(Enum_CompOp, 0, BL_COMP_OP_COUNT - 1,
   "src-over\0"
+  "src-copy\0" "@src\0"
   "src-in\0"
   "src-out\0"
   "src-atop\0"
-  "dst\0"
   "dst-over\0"
+  "dst-copy\0" "@dst\0"
   "dst-in\0"
   "dst-out\0"
   "dst-atop\0"
   "xor\0"
   "clear\0"
   "plus\0"
-  "merge\0"
   "minus\0"
   "multiply\0"
   "screen\0"
@@ -56,40 +61,23 @@ NJS_ENUM(Enum_CompOp_Id,
   "difference\0"
   "exclusion\0");
 
-NJS_ENUM(Enum_Context2D_StyleType,
-  b2d::Context2D::kStyleTypeNone,
-  b2d::Context2D::kStyleTypePattern,
+NJS_ENUM(Enum_StyleType, 0, BL_STYLE_TYPE_COUNT - 1,
   "none\0"
   "solid\0"
   "gradient\0"
   "pattern\0");
 
-NJS_ENUM(Enum_PixelFormat_Id,
-  b2d::PixelFormat::kNone,
-  b2d::PixelFormat::kA8,
+NJS_ENUM(Enum_Format, 0, BL_FORMAT_COUNT - 1,
   "none\0"
   "prgb32\0"
   "xrgb32\0"
   "a8\0");
 
-NJS_ENUM(Enum_FontFace_ImplType,
-  b2d::FontFace::kImplTypeNone,
-  b2d::FontFace::kImplTypeCount,
+NJS_ENUM(Enum_FontFaceType, 0, BL_FONT_FACE_TYPE_COUNT - 1,
   "none\0"
-  "truetype\0"
-  "opentype-cff\0"
-  "opentype-cff2\0");
+  "opentype\0");
 
-NJS_ENUM(Enum_Image_ImplType,
-  b2d::Image::kImplTypeNone,
-  b2d::Image::kImplTypeCount,
-  "none\0"
-  "memory\0"
-  "external\0");
-
-NJS_ENUM(Enum_ImageScaler_Filter,
-  b2d::ImageScaler::kFilterNone,
-  b2d::ImageScaler::kFilterMitchell,
+NJS_ENUM(Enum_ImageScaleFilter, 0, BL_IMAGE_SCALE_FILTER_COUNT - 1,
   "none\0"
   "nearest\0"
   "bilinear\0"
@@ -105,11 +93,11 @@ NJS_ENUM(Enum_ImageScaler_Filter,
   "blackman\0"
   "mitchell\0");
 
-NJS_ENUM(Enum_FillRule, 0, b2d::FillRule::kCount - 1,
+NJS_ENUM(Enum_FillRule, 0, BL_FILL_RULE_COUNT - 1,
   "non-zero\0"
   "even-odd\0");
 
-NJS_ENUM(Enum_StrokeCap, 0, b2d::StrokeCap::kCount - 1,
+NJS_ENUM(Enum_StrokeCap, 0, BL_STROKE_CAP_COUNT - 1,
   "butt\0"
   "square\0"
   "round\0"
@@ -117,23 +105,36 @@ NJS_ENUM(Enum_StrokeCap, 0, b2d::StrokeCap::kCount - 1,
   "triangle\0"
   "triangle-rev\0");
 
-NJS_ENUM(Enum_StrokeJoin, 0, b2d::StrokeJoin::kCount - 1,
-  "miter\0"
-  "round\0"
+NJS_ENUM(Enum_StrokeJoin, 0, BL_STROKE_JOIN_COUNT - 1,
+  "miter-clip\0" "@miter\0"
+  "miter-bevel\0"
+  "miter-round\0"
   "bevel\0"
-  "miter-rev\0"
-  "miter-round\0");
+  "round\0");
 
-NJS_ENUM(Enum_StrokeTransformOrder, 0, b2d::StrokeTransformOrder::kCount - 1,
+NJS_ENUM(Enum_StrokeTransformOrder, 0, BL_STROKE_TRANSFORM_ORDER_COUNT - 1,
   "after\0"
   "before\0");
 
-NJS_ENUM(Enum_Gradient_Extend, 0, b2d::Gradient::kExtendCount - 1,
+NJS_ENUM(Enum_PathReverseMode, 0, BL_PATH_REVERSE_MODE_COUNT - 1,
+  "complete\0"
+  "separate\0");
+
+NJS_ENUM(Enum_GradientType, 0, BL_GRADIENT_TYPE_COUNT - 1,
+  "linear\0"
+  "radial\0"
+  "conical\0");
+
+NJS_ENUM(Enum_GradientExtendMode, 0, BL_EXTEND_MODE_SIMPLE_COUNT - 1,
   "pad\0"
   "repeat\0"
   "reflect\0");
 
-NJS_ENUM(Enum_Pattern_Extend, 0, b2d::Pattern::kExtendCount - 1,
+NJS_ENUM(Enum_PatternQuality, 0, BL_PATTERN_QUALITY_COUNT - 1,
+  "nearest\0"
+  "bilinear\0");
+
+NJS_ENUM(Enum_PatternExtendMode, 0, BL_EXTEND_MODE_COMPLEX_COUNT - 1,
   "pad-x pad-y\0"          "@pad\0"
   "repeat-x repeat-y\0"    "@repeat\0"
   "reflect-x reflect-y\0"  "@reflect\0"
@@ -145,9 +146,88 @@ NJS_ENUM(Enum_Pattern_Extend, 0, b2d::Pattern::kExtendCount - 1,
   "reflect-x repeat-y\0"
 );
 
-NJS_ENUM(Enum_Pattern_Filter, 0, b2d::Pattern::kFilterCount - 1,
-  "nearest\0"
-  "bilinear\0");
+// ============================================================================
+// [MemBuffer]
+// ============================================================================
+
+//! Memory buffer used as a temporary storage.
+class MemBuffer {
+public:
+  void* _mem;
+  void* _buf;
+  size_t _capacity;
+
+  MemBuffer(const MemBuffer&) = delete;
+  MemBuffer& operator=(const MemBuffer&) = delete;
+
+  BL_INLINE MemBuffer() noexcept
+    : _mem(nullptr),
+      _buf(nullptr),
+      _capacity(0) {}
+
+  BL_INLINE ~MemBuffer() noexcept {
+    _reset();
+  }
+
+protected:
+  BL_INLINE MemBuffer(void* mem, void* buf, size_t capacity) noexcept
+    : _mem(mem),
+      _buf(buf),
+      _capacity(capacity) {}
+
+public:
+  BL_INLINE void* get() const noexcept { return _mem; }
+  BL_INLINE size_t capacity() const noexcept { return _capacity; }
+
+  BL_INLINE void* alloc(size_t size) noexcept {
+    if (size <= _capacity)
+      return _mem;
+
+    if (_mem != _buf)
+      free(_mem);
+
+    _mem = malloc(size);
+    _capacity = size;
+
+    return _mem;
+  }
+
+  BL_INLINE void _reset() noexcept {
+    if (_mem != _buf)
+      free(_mem);
+  }
+
+  BL_INLINE void reset() noexcept {
+    _reset();
+
+    _mem = nullptr;
+    _capacity = 0;
+  }
+};
+
+//! Memory buffer (temporary).
+//!
+//! This template is for fast routines that need to use memory  allocated on
+//! the stack, but the memory requirement is not known at compile time. The
+//! number of bytes allocated on the stack is described by `N` parameter.
+template<size_t N>
+class MemBufferTmp : public MemBuffer {
+public:
+  uint8_t _storage[N];
+
+  BL_INLINE MemBufferTmp() noexcept
+    : MemBuffer(_storage, _storage, N) {}
+
+  BL_INLINE ~MemBufferTmp() noexcept {}
+
+  using MemBuffer::alloc;
+
+  BL_INLINE void reset() noexcept {
+    _reset();
+    _mem = _buf;
+    _capacity = N;
+  }
+};
 
 // ============================================================================
 // [b2djs::ColorConcept]
@@ -212,22 +292,22 @@ struct ColorConcept {
   }
 
   template<typename CharT>
-  static NJS_INLINE unsigned int stringify(CharT* out, uint32_t color) noexcept {
+  static NJS_INLINE unsigned int stringify(CharT* out, uint32_t rgba) noexcept {
     unsigned int i = 1;
     out[0] = '#';
 
-    if (!b2d::ArgbUtil::isOpaque32(color)) {
-      out[1] = static_cast<CharT>(intToHex((color >> 28) & 0xFu));
-      out[2] = static_cast<CharT>(intToHex((color >> 24) & 0xFu));
+    if (!BLRgba32(rgba).isOpaque()) {
+      out[1] = static_cast<CharT>(intToHex((rgba >> 28) & 0xFu));
+      out[2] = static_cast<CharT>(intToHex((rgba >> 24) & 0xFu));
       i += 2;
     }
 
-    out[i + 0] = static_cast<CharT>(intToHex((color >> 20) & 0xFu));
-    out[i + 1] = static_cast<CharT>(intToHex((color >> 16) & 0xFu));
-    out[i + 2] = static_cast<CharT>(intToHex((color >> 12) & 0xFu));
-    out[i + 3] = static_cast<CharT>(intToHex((color >>  8) & 0xFu));
-    out[i + 4] = static_cast<CharT>(intToHex((color >>  4) & 0xFu));
-    out[i + 5] = static_cast<CharT>(intToHex((color >>  0) & 0xFu));
+    out[i + 0] = static_cast<CharT>(intToHex((rgba >> 20) & 0xFu));
+    out[i + 1] = static_cast<CharT>(intToHex((rgba >> 16) & 0xFu));
+    out[i + 2] = static_cast<CharT>(intToHex((rgba >> 12) & 0xFu));
+    out[i + 3] = static_cast<CharT>(intToHex((rgba >>  8) & 0xFu));
+    out[i + 4] = static_cast<CharT>(intToHex((rgba >>  4) & 0xFu));
+    out[i + 5] = static_cast<CharT>(intToHex((rgba >>  0) & 0xFu));
 
     return i + 6;
   }
@@ -243,15 +323,15 @@ public:
 
   NJS_NOINLINE njs::Result deserialize(njs::Context& ctx, const njs::Value& in, uint32_t& out) const noexcept {
     if (in.isNumber()) {
-      out = static_cast<uint32_t>(in.doubleValue());
+      out = static_cast<uint32_t>(ctx.doubleValue(in));
       return njs::Globals::kResultOk;
     }
 
     if (in.isString()) {
       uint16_t content[kMaxColorSize];
-      int size = in.stringLength();
+      int size = ctx.stringLength(in);
 
-      if (size <= 0 || size > kMaxColorSize || in.readUtf16(content, size) < size)
+      if (size <= 0 || size > kMaxColorSize || ctx.readUtf16(in, content, size) < size)
         return njs::Globals::kResultInvalidValue;
 
       out = parse<uint16_t>(content, size);
@@ -263,134 +343,179 @@ public:
 };
 
 // ============================================================================
-// [b2djs::BlendJSUtils]
+// [b2djs::B2DUtils]
 // ============================================================================
 
-struct BlendJSUtils {
-  // --------------------------------------------------------------------------
-  // [Geometry]
-  // --------------------------------------------------------------------------
+struct B2DUtils {
+  union GeometryData {
+    BL_INLINE GeometryData() noexcept {}
+    BL_INLINE ~GeometryData() noexcept {}
 
-  union GeomData {
-    b2d::Wrap<b2d::Box> box;
-    b2d::Wrap<b2d::Rect> rect;
-    b2d::Wrap<b2d::Round> round;
-    b2d::Wrap<b2d::Circle> circle;
-    b2d::Wrap<b2d::Ellipse> ellipse;
-    b2d::Wrap<b2d::Arc> arc;
-    b2d::Wrap<b2d::Triangle> triangle;
-    b2d::Wrap<b2d::CArray<b2d::Point> > poly;
-    b2d::Wrap<b2d::Path2D> path;
+    BLBox box;
+    BLRect rect;
+    BLRoundRect round;
+    BLCircle circle;
+    BLEllipse ellipse;
+    BLArc arc;
+    BLTriangle triangle;
+    BLArrayView<BLPoint> poly;
+    BLPath path;
   };
 
-  static njs::Result unpackGeomArg(njs::FunctionCallContext& ctx, uint32_t& id, GeomData& data, b2d::MemBuffer& mem) noexcept;
-
-  // --------------------------------------------------------------------------
-  // [Matrix]
-  // --------------------------------------------------------------------------
-
-  union MatrixData {
-    b2d::Wrap<b2d::Matrix2D> matrix;
-    double d[6];
-  };
-
-  static njs::Result unpackMatrixArg(njs::FunctionCallContext& ctx, uint32_t& op, MatrixData& data) noexcept;
+  static njs::Result unpackMatrixArg(njs::FunctionCallContext& ctx, uint32_t& op, BLMatrix2D& m) noexcept;
+  static njs::Result unpackGeometryArg(njs::FunctionCallContext& ctx, uint32_t& type, GeometryData& data, MemBuffer& mem) noexcept;
 };
 
-njs::Result BlendJSUtils::unpackGeomArg(njs::FunctionCallContext& ctx, uint32_t& id, GeomData& data, b2d::MemBuffer& mem) noexcept {
+njs::Result B2DUtils::unpackMatrixArg(
+  njs::FunctionCallContext& ctx, uint32_t& op, BLMatrix2D& m) noexcept {
+
   unsigned int argc = ctx.argumentsLength();
-  switch (id) {
-    case b2d::kGeomArgBox:
-    case b2d::kGeomArgLine: {
-      NJS_CHECK(ctx.verifyArgumentsLength(4));
-      NJS_CHECK(ctx.unpackArgument(0, data.box->_x0));
-      NJS_CHECK(ctx.unpackArgument(1, data.box->_y0));
-      NJS_CHECK(ctx.unpackArgument(2, data.box->_x1));
-      NJS_CHECK(ctx.unpackArgument(3, data.box->_y1));
+  switch (op) {
+    case BL_MATRIX2D_OP_TRANSLATE:
+    case BL_MATRIX2D_OP_POST_TRANSLATE:
+    case BL_MATRIX2D_OP_SKEW:
+    case BL_MATRIX2D_OP_POST_SKEW:
+      NJS_CHECK(ctx.verifyArgumentsLength(2));
+
+L_UnpackXY:
+      NJS_CHECK(ctx.unpackArgument(0, m.m[0]));
+      NJS_CHECK(ctx.unpackArgument(1, m.m[1]));
+      return njs::Globals::kResultOk;
+
+    case BL_MATRIX2D_OP_SCALE:
+    case BL_MATRIX2D_OP_POST_SCALE:
+      if (argc == 2)
+        goto L_UnpackXY;
+
+      NJS_CHECK(ctx.verifyArgumentsLength(1));
+      NJS_CHECK(ctx.unpackArgument(0, m.m[0]));
+      m.m[1] = m.m[0];
+      return njs::Globals::kResultOk;
+
+    case BL_MATRIX2D_OP_ROTATE:
+    case BL_MATRIX2D_OP_POST_ROTATE:
+      if (argc != 1 && argc != 3)
+        return ctx.invalidArgumentsLength();
+
+      NJS_CHECK(ctx.unpackArgument(0, m.m[0]));
+      if (argc == 3) {
+        NJS_CHECK(ctx.unpackArgument(1, m.m[1]));
+        NJS_CHECK(ctx.unpackArgument(2, m.m[2]));
+        op += (BL_MATRIX2D_OP_POST_ROTATE - BL_MATRIX2D_OP_ROTATE);
+      }
 
       return njs::Globals::kResultOk;
-    }
 
-    case b2d::kGeomArgRect: {
-      NJS_CHECK(ctx.verifyArgumentsLength(4));
-      NJS_CHECK(ctx.unpackArgument(0, data.rect->_x));
-      NJS_CHECK(ctx.unpackArgument(1, data.rect->_y));
-      NJS_CHECK(ctx.unpackArgument(2, data.rect->_w));
-      NJS_CHECK(ctx.unpackArgument(3, data.rect->_h));
-
-      return njs::Globals::kResultOk;
-    }
-
-    case b2d::kGeomArgCircle: {
-      NJS_CHECK(ctx.verifyArgumentsLength(3));
-      NJS_CHECK(ctx.unpackArgument(0, data.circle->_center._x));
-      NJS_CHECK(ctx.unpackArgument(1, data.circle->_center._y));
-      NJS_CHECK(ctx.unpackArgument(2, data.circle->_radius));
-
-      return njs::Globals::kResultOk;
-    }
-
-    case b2d::kGeomArgEllipse: {
-      NJS_CHECK(ctx.verifyArgumentsLength(4));
-      NJS_CHECK(ctx.unpackArgument(0, data.ellipse->_center._x));
-      NJS_CHECK(ctx.unpackArgument(1, data.ellipse->_center._y));
-      NJS_CHECK(ctx.unpackArgument(2, data.ellipse->_radius._x));
-      NJS_CHECK(ctx.unpackArgument(3, data.ellipse->_radius._y));
-
-      return njs::Globals::kResultOk;
-    }
-
-    case b2d::kGeomArgRound: {
-      NJS_CHECK(ctx.verifyArgumentsLength(5, 6));
-
-      NJS_CHECK(ctx.unpackArgument(0, data.round->_rect._x));
-      NJS_CHECK(ctx.unpackArgument(1, data.round->_rect._y));
-      NJS_CHECK(ctx.unpackArgument(2, data.round->_rect._w));
-      NJS_CHECK(ctx.unpackArgument(3, data.round->_rect._h));
-
-      NJS_CHECK(ctx.unpackArgument(4, data.round->_radius._x));
-      data.round->_radius._y = data.round->_radius._x;
-
-      if (argc == 6)
-        NJS_CHECK(ctx.unpackArgument(4, data.round->_radius._y));
-
-      return njs::Globals::kResultOk;
-    }
-
-    case b2d::kGeomArgArc:
-    case b2d::kGeomArgChord:
-    case b2d::kGeomArgPie: {
-      NJS_CHECK(ctx.verifyArgumentsLength(5, 6));
-
-      NJS_CHECK(ctx.unpackArgument(0, data.arc->_center._x));
-      NJS_CHECK(ctx.unpackArgument(1, data.arc->_center._y));
-
-      NJS_CHECK(ctx.unpackArgument(2, data.arc->_radius._x));
-      data.arc->_radius._y = data.arc->_radius._x;
-
-      if (argc == 6)
-        NJS_CHECK(ctx.unpackArgument(3, data.arc->_radius._y));
-
-      NJS_CHECK(ctx.unpackArgument(argc - 2, data.arc->_start));
-      NJS_CHECK(ctx.unpackArgument(argc - 1, data.arc->_sweep));
-
-      return njs::Globals::kResultOk;
-    }
-
-    case b2d::kGeomArgTriangle: {
+    case BL_MATRIX2D_OP_TRANSFORM:
+    case BL_MATRIX2D_OP_POST_TRANSFORM:
       NJS_CHECK(ctx.verifyArgumentsLength(6));
-      NJS_CHECK(ctx.unpackArgument(0, data.triangle->_p[0]._x));
-      NJS_CHECK(ctx.unpackArgument(1, data.triangle->_p[0]._y));
-      NJS_CHECK(ctx.unpackArgument(2, data.triangle->_p[1]._x));
-      NJS_CHECK(ctx.unpackArgument(3, data.triangle->_p[1]._y));
-      NJS_CHECK(ctx.unpackArgument(4, data.triangle->_p[2]._x));
-      NJS_CHECK(ctx.unpackArgument(5, data.triangle->_p[2]._y));
+      NJS_CHECK(ctx.unpackArgument(0, m.m[0]));
+      NJS_CHECK(ctx.unpackArgument(1, m.m[1]));
+      NJS_CHECK(ctx.unpackArgument(2, m.m[2]));
+      NJS_CHECK(ctx.unpackArgument(3, m.m[3]));
+      NJS_CHECK(ctx.unpackArgument(4, m.m[4]));
+      NJS_CHECK(ctx.unpackArgument(5, m.m[5]));
+      return njs::Globals::kResultOk;
+
+    default:
+      return njs::Globals::kResultInvalidState;
+  }
+}
+
+njs::Result B2DUtils::unpackGeometryArg(njs::FunctionCallContext& ctx, uint32_t& type, GeometryData& data, MemBuffer& mem) noexcept {
+  unsigned int argc = ctx.argumentsLength();
+  switch (type) {
+    case BL_GEOMETRY_TYPE_BOXD:
+    case BL_GEOMETRY_TYPE_LINE: {
+      NJS_CHECK(ctx.verifyArgumentsLength(4));
+      NJS_CHECK(ctx.unpackArgument(0, data.box.x0));
+      NJS_CHECK(ctx.unpackArgument(1, data.box.y0));
+      NJS_CHECK(ctx.unpackArgument(2, data.box.x1));
+      NJS_CHECK(ctx.unpackArgument(3, data.box.y1));
 
       return njs::Globals::kResultOk;
     }
 
-    case b2d::kGeomArgPolygon:
-    case b2d::kGeomArgPolyline: {
+    case BL_GEOMETRY_TYPE_RECTD: {
+      NJS_CHECK(ctx.verifyArgumentsLength(4));
+      NJS_CHECK(ctx.unpackArgument(0, data.rect.x));
+      NJS_CHECK(ctx.unpackArgument(1, data.rect.y));
+      NJS_CHECK(ctx.unpackArgument(2, data.rect.w));
+      NJS_CHECK(ctx.unpackArgument(3, data.rect.h));
+
+      return njs::Globals::kResultOk;
+    }
+
+    case BL_GEOMETRY_TYPE_CIRCLE: {
+      NJS_CHECK(ctx.verifyArgumentsLength(3));
+      NJS_CHECK(ctx.unpackArgument(0, data.circle.center.x));
+      NJS_CHECK(ctx.unpackArgument(1, data.circle.center.y));
+      NJS_CHECK(ctx.unpackArgument(2, data.circle.r));
+
+      return njs::Globals::kResultOk;
+    }
+
+    case BL_GEOMETRY_TYPE_ELLIPSE: {
+      NJS_CHECK(ctx.verifyArgumentsLength(4));
+      NJS_CHECK(ctx.unpackArgument(0, data.ellipse.center.x));
+      NJS_CHECK(ctx.unpackArgument(1, data.ellipse.center.y));
+      NJS_CHECK(ctx.unpackArgument(2, data.ellipse.radius.x));
+      NJS_CHECK(ctx.unpackArgument(3, data.ellipse.radius.y));
+
+      return njs::Globals::kResultOk;
+    }
+
+    case BL_GEOMETRY_TYPE_ROUND_RECT: {
+      NJS_CHECK(ctx.verifyArgumentsLength(5, 6));
+
+      NJS_CHECK(ctx.unpackArgument(0, data.round.x));
+      NJS_CHECK(ctx.unpackArgument(1, data.round.y));
+      NJS_CHECK(ctx.unpackArgument(2, data.round.w));
+      NJS_CHECK(ctx.unpackArgument(3, data.round.h));
+
+      NJS_CHECK(ctx.unpackArgument(4, data.round.rx));
+      data.round.ry = data.round.rx;
+
+      if (argc == 6)
+        NJS_CHECK(ctx.unpackArgument(4, data.round.ry));
+
+      return njs::Globals::kResultOk;
+    }
+
+    case BL_GEOMETRY_TYPE_ARC:
+    case BL_GEOMETRY_TYPE_CHORD:
+    case BL_GEOMETRY_TYPE_PIE: {
+      NJS_CHECK(ctx.verifyArgumentsLength(5, 6));
+
+      NJS_CHECK(ctx.unpackArgument(0, data.arc.cx));
+      NJS_CHECK(ctx.unpackArgument(1, data.arc.cy));
+
+      NJS_CHECK(ctx.unpackArgument(2, data.arc.rx));
+      data.arc.ry = data.arc.rx;
+
+      if (argc == 6)
+        NJS_CHECK(ctx.unpackArgument(3, data.arc.ry));
+
+      NJS_CHECK(ctx.unpackArgument(argc - 2, data.arc.start));
+      NJS_CHECK(ctx.unpackArgument(argc - 1, data.arc.sweep));
+
+      return njs::Globals::kResultOk;
+    }
+
+    case BL_GEOMETRY_TYPE_TRIANGLE: {
+      NJS_CHECK(ctx.verifyArgumentsLength(6));
+      NJS_CHECK(ctx.unpackArgument(0, data.triangle.x0));
+      NJS_CHECK(ctx.unpackArgument(1, data.triangle.y0));
+      NJS_CHECK(ctx.unpackArgument(2, data.triangle.x1));
+      NJS_CHECK(ctx.unpackArgument(3, data.triangle.y1));
+      NJS_CHECK(ctx.unpackArgument(4, data.triangle.x2));
+      NJS_CHECK(ctx.unpackArgument(5, data.triangle.y2));
+
+      return njs::Globals::kResultOk;
+    }
+
+    case BL_GEOMETRY_TYPE_POLYGOND:
+    case BL_GEOMETRY_TYPE_POLYLINED: {
       if (argc < 2 || (argc & 1) == 1)
         return ctx.invalidArgumentsLength();
 
@@ -403,17 +528,17 @@ njs::Result BlendJSUtils::unpackGeomArg(njs::FunctionCallContext& ctx, uint32_t&
       for (unsigned int i = 0; i < argc; i++)
         NJS_CHECK(ctx.unpackArgument(i, poly[i]));
 
-      data.poly->reset(reinterpret_cast<b2d::Point*>(poly), nPoly);
+      data.poly.reset(reinterpret_cast<BLPoint*>(poly), nPoly);
       return njs::Globals::kResultOk;
     }
 
-    case b2d::kGeomArgPath2D: {
-      JSPath2D* path;
+    case BL_GEOMETRY_TYPE_PATH: {
+      PathWrap* path;
 
       NJS_CHECK(ctx.verifyArgumentsLength(1));
-      NJS_CHECK(ctx.unwrapArgument<JSPath2D>(0, &path));
+      NJS_CHECK(ctx.unwrapArgument<PathWrap>(0, &path));
 
-      data.path->_impl = path->_obj.impl();
+      data.path.impl = path->_obj.impl;
       return njs::Globals::kResultOk;
     }
 
@@ -422,76 +547,46 @@ njs::Result BlendJSUtils::unpackGeomArg(njs::FunctionCallContext& ctx, uint32_t&
   }
 }
 
-njs::Result BlendJSUtils::unpackMatrixArg(
-  njs::FunctionCallContext& ctx, uint32_t& op, MatrixData& data) noexcept {
+// ============================================================================
+// [b2djs::RuntimeWrap]
+// ============================================================================
 
-  unsigned int argc = ctx.argumentsLength();
-  switch (op) {
-    case b2d::Matrix2D::kOpTranslateP:
-    case b2d::Matrix2D::kOpTranslateA:
-    case b2d::Matrix2D::kOpSkewP:
-    case b2d::Matrix2D::kOpSkewA:
-      NJS_CHECK(ctx.verifyArgumentsLength(2));
+struct RuntimeWrap {
+  NJS_BIND_STATIC(memoryInfo) {
+    BLRuntimeMemoryInfo info;
+    blRuntimeQueryInfo(BL_RUNTIME_INFO_TYPE_MEMORY, &info);
 
-L_UnpackXY:
-      NJS_CHECK(ctx.unpackArgument(0, data.d[0]));
-      NJS_CHECK(ctx.unpackArgument(1, data.d[1]));
-      return njs::Globals::kResultOk;
+    njs::Value obj = ctx.newObject();
+    NJS_CHECK(obj);
 
-    case b2d::Matrix2D::kOpScaleP:
-    case b2d::Matrix2D::kOpScaleA:
-      if (argc == 2)
-        goto L_UnpackXY;
+    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("vmUsed"              )), ctx.newValue(info.vmUsed)));
+    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("vmReserved"          )), ctx.newValue(info.vmReserved)));
+    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("vmOverhead"          )), ctx.newValue(info.vmOverhead)));
+    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("vmBlockCount"        )), ctx.newValue(info.vmBlockCount)));
+    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("zmUsed"              )), ctx.newValue(info.zmUsed)));
+    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("zmReserved"          )), ctx.newValue(info.zmReserved)));
+    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("zmOverhead"          )), ctx.newValue(info.zmOverhead)));
+    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("zmBlockCount"        )), ctx.newValue(info.zmBlockCount)));
+    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("dynamicPipelineCount")), ctx.newValue(info.dynamicPipelineCount)));
 
-      NJS_CHECK(ctx.verifyArgumentsLength(1));
-      NJS_CHECK(ctx.unpackArgument(0, data.d[0]));
-      data.d[1] = data.d[0];
-      return njs::Globals::kResultOk;
-
-    case b2d::Matrix2D::kOpRotateP:
-    case b2d::Matrix2D::kOpRotateA:
-      if (argc != 1 && argc != 3)
-        return ctx.invalidArgumentsLength();
-
-      NJS_CHECK(ctx.unpackArgument(0, data.d[0]));
-      if (argc == 3) {
-        NJS_CHECK(ctx.unpackArgument(1, data.d[1]));
-        NJS_CHECK(ctx.unpackArgument(2, data.d[2]));
-        op += (b2d::Matrix2D::kOpRotatePtP - b2d::Matrix2D::kOpRotateP);
-      }
-
-      return njs::Globals::kResultOk;
-
-    case b2d::Matrix2D::kOpMultiplyP:
-    case b2d::Matrix2D::kOpMultiplyA:
-      NJS_CHECK(ctx.verifyArgumentsLength(6));
-      NJS_CHECK(ctx.unpackArgument(0, data.d[0]));
-      NJS_CHECK(ctx.unpackArgument(1, data.d[1]));
-      NJS_CHECK(ctx.unpackArgument(2, data.d[2]));
-      NJS_CHECK(ctx.unpackArgument(3, data.d[3]));
-      NJS_CHECK(ctx.unpackArgument(4, data.d[4]));
-      NJS_CHECK(ctx.unpackArgument(5, data.d[5]));
-      return njs::Globals::kResultOk;
-
-    default:
-      return njs::Globals::kResultInvalidState;
+    return ctx.returnValue(obj);
   }
-}
+};
 
 // ============================================================================
-// [b2djs::JSCookie]
+// [b2djs::ContextCookieWrap]
 // ============================================================================
 
-NJS_BIND_CLASS(JSCookie) {
+NJS_BIND_CLASS(ContextCookieWrap) {
   NJS_BIND_CONSTRUCTOR() {
     unsigned int argc = ctx.argumentsLength();
     if (argc == 1) {
-      JSCookie* cookie;
-      NJS_CHECK(ctx.unwrapArgument<JSCookie>(0, &cookie));
-      return ctx.returnNew<JSCookie>(cookie->_obj);
+      ContextCookieWrap* cookie;
+      NJS_CHECK(ctx.unwrapArgument<ContextCookieWrap>(0, &cookie));
+      return ctx.returnNew<ContextCookieWrap>(cookie->_obj);
     }
     else {
-      return ctx.returnNew<JSCookie>();
+      return ctx.returnNew<ContextCookieWrap>();
     }
   }
 
@@ -510,49 +605,45 @@ NJS_BIND_CLASS(JSCookie) {
 };
 
 // ============================================================================
-// [b2djs::JSImage]
+// [b2djs::ImageWrap]
 // ============================================================================
 
-NJS_BIND_CLASS(JSImage) {
+NJS_BIND_CLASS(ImageWrap) {
   NJS_BIND_CONSTRUCTOR() {
     unsigned int argc = ctx.argumentsLength();
     if (argc == 1) {
-      JSImage* image;
-      NJS_CHECK(ctx.unwrapArgument<JSImage>(0, &image));
-      return ctx.returnNew<JSImage>(image->_obj);
+      ImageWrap* image;
+      NJS_CHECK(ctx.unwrapArgument<ImageWrap>(0, &image));
+      return ctx.returnNew<ImageWrap>(image->_obj);
     }
     else if (argc == 3) {
       int w, h;
       uint32_t format;
 
-      NJS_CHECK(ctx.unpackArgument(0, w, njs::Range<int>(1, b2d::Image::kMaxSize)));
-      NJS_CHECK(ctx.unpackArgument(1, h, njs::Range<int>(1, b2d::Image::kMaxSize)));
-      NJS_CHECK(ctx.unpackArgument(2, format, Enum_PixelFormat_Id));
+      NJS_CHECK(ctx.unpackArgument(0, w, njs::Range<int>(1, BL_RUNTIME_MAX_IMAGE_SIZE)));
+      NJS_CHECK(ctx.unpackArgument(1, h, njs::Range<int>(1, BL_RUNTIME_MAX_IMAGE_SIZE)));
+      NJS_CHECK(ctx.unpackArgument(2, format, Enum_Format));
 
-      if (format == b2d::PixelFormat::kNone)
+      if (format == BL_FORMAT_NONE)
         return ctx.invalidArgumentCustom(2, "Pixel format cannot be 'none'");
 
-      b2d::Image img;
-      b2d::Error err = img.create(w, h, format);
+      BLImage img;
+      BLResult err = img.create(w, h, format);
 
       if (err) {
         // TODO: Throw out of memory exception.
       }
 
-      return ctx.returnNew<JSImage>(img);
+      return ctx.returnNew<ImageWrap>(img);
     }
     else {
-      return ctx.returnNew<JSImage>();
+      return ctx.returnNew<ImageWrap>();
     }
   }
 
   // --------------------------------------------------------------------------
   // [Accessors]
   // --------------------------------------------------------------------------
-
-  NJS_BIND_GET(implType) {
-    return ctx.returnValue(self->_obj.implType(), Enum_Image_ImplType);
-  }
 
   NJS_BIND_GET(width) {
     return ctx.returnValue(self->_obj.width());
@@ -562,8 +653,8 @@ NJS_BIND_CLASS(JSImage) {
     return ctx.returnValue(self->_obj.height());
   }
 
-  NJS_BIND_GET(pixelFormat) {
-    return ctx.returnValue(self->_obj.pixelFormat(), Enum_PixelFormat_Id);
+  NJS_BIND_GET(format) {
+    return ctx.returnValue(self->_obj.format(), Enum_Format);
   }
 
   NJS_BIND_METHOD(empty) {
@@ -572,20 +663,20 @@ NJS_BIND_CLASS(JSImage) {
 };
 
 // ============================================================================
-// [b2djs::JSPath2D]
+// [b2djs::PathWrap]
 // ============================================================================
 
-NJS_BIND_CLASS(JSPath2D) {
+NJS_BIND_CLASS(PathWrap) {
   NJS_BIND_CONSTRUCTOR() {
     unsigned int argc = ctx.argumentsLength();
     if (argc == 0) {
-      return ctx.returnNew<JSPath2D>();
+      return ctx.returnNew<PathWrap>();
     }
     else if (argc == 1) {
-      JSPath2D* other;
+      PathWrap* other;
 
-      NJS_CHECK(ctx.unwrapArgument<JSPath2D>(0, &other));
-      return ctx.returnNew<JSPath2D>(other->_obj);
+      NJS_CHECK(ctx.unwrapArgument<PathWrap>(0, &other));
+      return ctx.returnNew<PathWrap>(other->_obj);
     }
     else {
       return ctx.invalidArgumentsLength();
@@ -622,12 +713,12 @@ NJS_BIND_CLASS(JSPath2D) {
   // --------------------------------------------------------------------------
 
   NJS_BIND_METHOD(moveTo) { return moveToInternal(ctx, self, false); }
-  NJS_BIND_METHOD(moveToRel) { return moveToInternal(ctx, self, true); }
+  // NJS_BIND_METHOD(moveToRel) { return moveToInternal(ctx, self, true); }
 
   NJS_BIND_METHOD(lineTo) { return lineToInternal(ctx, self, false); }
-  NJS_BIND_METHOD(lineToRel) { return lineToInternal(ctx, self, true); }
+  // NJS_BIND_METHOD(lineToRel) { return lineToInternal(ctx, self, true); }
 
-  static njs::Result moveToInternal(njs::FunctionCallContext& ctx, JSPath2D* self, bool isRelative) noexcept {
+  static njs::Result moveToInternal(njs::FunctionCallContext& ctx, PathWrap* self, bool isRelative) noexcept {
     unsigned int argc = ctx.argumentsLength();
     double x, y;
 
@@ -644,15 +735,15 @@ NJS_BIND_CLASS(JSPath2D) {
       return ctx.invalidArgumentsLength();
     }
 
-    if (!isRelative)
+    //if (!isRelative)
       self->_obj.moveTo(x, y);
-    else
-      self->_obj.moveToRel(x, y);
+    //else
+    //  self->_obj.moveToRel(x, y);
 
     return ctx.returnValue(ctx.This());
   }
 
-  static njs::Result lineToInternal(njs::FunctionCallContext& ctx, JSPath2D* self, bool isRelative) noexcept {
+  static njs::Result lineToInternal(njs::FunctionCallContext& ctx, PathWrap* self, bool isRelative) noexcept {
     unsigned int argc = ctx.argumentsLength();
 
     // One argument is an object having `x` and `y` properties.
@@ -665,7 +756,7 @@ NJS_BIND_CLASS(JSPath2D) {
 
       do {
         int i = 0;
-        int n = std::min<int>(argc - a, static_cast<int>(B2D_ARRAY_SIZE(points)));
+        int n = std::min<int>(argc - a, static_cast<int>(ARRAY_SIZE(points)));
 
         do {
           double x, y;
@@ -679,10 +770,10 @@ NJS_BIND_CLASS(JSPath2D) {
           i += 2;
         } while (i < n);
 
-        if (!isRelative)
-          self->_obj.polyTo(reinterpret_cast<b2d::Point*>(points), n >> 1);
-        else
-          self->_obj.polyToRel(reinterpret_cast<b2d::Point*>(points), n >> 1);
+        //if (!isRelative)
+          self->_obj.polyTo(reinterpret_cast<BLPoint*>(points), n >> 1);
+        //else
+        //  self->_obj.polyToRel(reinterpret_cast<BLPoint*>(points), n >> 1);
       } while (a < argc);
     }
     else {
@@ -697,12 +788,12 @@ NJS_BIND_CLASS(JSPath2D) {
   // --------------------------------------------------------------------------
 
   NJS_BIND_METHOD(quadTo) { return quadToInternal(ctx, self, false); }
-  NJS_BIND_METHOD(quadToRel) { return quadToInternal(ctx, self, true); }
+  // NJS_BIND_METHOD(quadToRel) { return quadToInternal(ctx, self, true); }
 
   NJS_BIND_METHOD(smoothQuadTo) { return smoothQuadToInternal(ctx, self, false); }
-  NJS_BIND_METHOD(smoothQuadToRel) { return smoothQuadToInternal(ctx, self, true); }
+  // NJS_BIND_METHOD(smoothQuadToRel) { return smoothQuadToInternal(ctx, self, true); }
 
-  static njs::Result quadToInternal(njs::FunctionCallContext& ctx, JSPath2D* self, bool isRelative) noexcept {
+  static njs::Result quadToInternal(njs::FunctionCallContext& ctx, PathWrap* self, bool isRelative) noexcept {
     unsigned int argc = ctx.argumentsLength();
 
     if (argc == 4) {
@@ -713,10 +804,10 @@ NJS_BIND_CLASS(JSPath2D) {
       NJS_CHECK(ctx.unpackArgument(2, x2));
       NJS_CHECK(ctx.unpackArgument(3, y2));
 
-      if (!isRelative)
+      //if (!isRelative)
         self->_obj.quadTo(x1, y1, x2, y2);
-      else
-        self->_obj.quadToRel(x1, y1, x2, y2);
+      //else
+      //  self->_obj.quadToRel(x1, y1, x2, y2);
     }
     else {
       return ctx.invalidArgumentsLength();
@@ -725,7 +816,7 @@ NJS_BIND_CLASS(JSPath2D) {
     return ctx.returnValue(ctx.This());
   }
 
-  static njs::Result smoothQuadToInternal(njs::FunctionCallContext& ctx, JSPath2D* self, bool isRelative) noexcept {
+  static njs::Result smoothQuadToInternal(njs::FunctionCallContext& ctx, PathWrap* self, bool isRelative) noexcept {
     unsigned int argc = ctx.argumentsLength();
 
     if (argc == 2) {
@@ -734,10 +825,10 @@ NJS_BIND_CLASS(JSPath2D) {
       NJS_CHECK(ctx.unpackArgument(0, x2));
       NJS_CHECK(ctx.unpackArgument(1, y2));
 
-      if (!isRelative)
+      //if (!isRelative)
         self->_obj.smoothQuadTo(x2, y2);
-      else
-        self->_obj.smoothQuadToRel(x2, y2);
+      //else
+      //  self->_obj.smoothQuadToRel(x2, y2);
     }
     else {
       return ctx.invalidArgumentsLength();
@@ -751,12 +842,12 @@ NJS_BIND_CLASS(JSPath2D) {
   // --------------------------------------------------------------------------
 
   NJS_BIND_METHOD(cubicTo) { return cubicToInternal(ctx, self, false); }
-  NJS_BIND_METHOD(cubicToRel) { return cubicToInternal(ctx, self, true); }
+  // NJS_BIND_METHOD(cubicToRel) { return cubicToInternal(ctx, self, true); }
 
   NJS_BIND_METHOD(smoothCubicTo) { return smoothCubicToInternal(ctx, self, false); }
-  NJS_BIND_METHOD(smoothCubicToRel) { return smoothCubicToInternal(ctx, self, true); }
+  // NJS_BIND_METHOD(smoothCubicToRel) { return smoothCubicToInternal(ctx, self, true); }
 
-  static njs::Result cubicToInternal(njs::FunctionCallContext& ctx, JSPath2D* self, bool isRelative) noexcept {
+  static njs::Result cubicToInternal(njs::FunctionCallContext& ctx, PathWrap* self, bool isRelative) noexcept {
     unsigned int argc = ctx.argumentsLength();
     if (argc == 6) {
       double x1, y1, x2, y2, x3, y3;
@@ -768,10 +859,10 @@ NJS_BIND_CLASS(JSPath2D) {
       NJS_CHECK(ctx.unpackArgument(4, x3));
       NJS_CHECK(ctx.unpackArgument(5, y3));
 
-      if (!isRelative)
+      //if (!isRelative)
         self->_obj.cubicTo(x1, y1, x2, y2, x3, y3);
-      else
-        self->_obj.cubicToRel(x1, y1, x2, y2, x3, y3);
+      //else
+      //  self->_obj.cubicToRel(x1, y1, x2, y2, x3, y3);
     }
     else {
       return ctx.invalidArgumentsLength();
@@ -780,7 +871,7 @@ NJS_BIND_CLASS(JSPath2D) {
     return ctx.returnValue(ctx.This());
   }
 
-  static njs::Result smoothCubicToInternal(njs::FunctionCallContext& ctx, JSPath2D* self, bool isRelative) noexcept {
+  static njs::Result smoothCubicToInternal(njs::FunctionCallContext& ctx, PathWrap* self, bool isRelative) noexcept {
     unsigned int argc = ctx.argumentsLength();
 
     if (argc == 4) {
@@ -791,10 +882,10 @@ NJS_BIND_CLASS(JSPath2D) {
       NJS_CHECK(ctx.unpackArgument(2, x3));
       NJS_CHECK(ctx.unpackArgument(3, y3));
 
-      if (!isRelative)
+      //if (!isRelative)
         self->_obj.smoothCubicTo(x2, y2, x3, y3);
-      else
-        self->_obj.smoothCubicToRel(x2, y2, x3, y3);
+      //else
+      //  self->_obj.smoothCubicToRel(x2, y2, x3, y3);
     }
     else {
       return ctx.invalidArgumentsLength();
@@ -808,19 +899,16 @@ NJS_BIND_CLASS(JSPath2D) {
   // --------------------------------------------------------------------------
 
   NJS_BIND_METHOD(arcTo) { return arcToInternal(ctx, self, false); }
-  NJS_BIND_METHOD(arcToRel) { return arcToInternal(ctx, self, true); }
+  // NJS_BIND_METHOD(arcToRel) { return arcToInternal(ctx, self, true); }
 
-  NJS_BIND_METHOD(ellipticArcTo) { return ellipticArcToInternal(ctx, self, false); }
-  NJS_BIND_METHOD(ellipticArcToRel) { return ellipticArcToInternal(ctx, self, true); }
-
-  static njs::Result arcToInternal(njs::FunctionCallContext& ctx, JSPath2D* self, bool isRelative) noexcept {
+  static njs::Result arcToInternal(njs::FunctionCallContext& ctx, PathWrap* self, bool isRelative) noexcept {
     unsigned int argc = ctx.argumentsLength();
 
     if (argc >= 5) {
       double cx, cy, rx, ry, start, sweep;
-      bool startPath = false;
+      bool forceMoveTo = false;
 
-      if (ctx.unpackArgument(argc - 1, startPath) == njs::Globals::kResultOk && --argc < 5)
+      if (ctx.unpackArgument(argc - 1, forceMoveTo) == njs::Globals::kResultOk && --argc < 5)
         return ctx.invalidArgumentsLength();
 
       NJS_CHECK(ctx.unpackArgument(0, cx));
@@ -835,10 +923,10 @@ NJS_BIND_CLASS(JSPath2D) {
       NJS_CHECK(ctx.unpackArgument(argc - 2, start));
       NJS_CHECK(ctx.unpackArgument(argc - 1, sweep));
 
-      if (!isRelative)
-        self->_obj.arcTo(b2d::Point(cx, cy), b2d::Point(rx, ry), start, sweep, startPath);
-      else
-        self->_obj.arcToRel(b2d::Point(cx, cy), b2d::Point(rx, ry), start, sweep, startPath);
+      //if (!isRelative)
+        self->_obj.arcTo(cx, cy, rx, ry, start, sweep, forceMoveTo);
+      //else
+      //  self->_obj.arcToRel(BLPoint(cx, cy), BLPoint(rx, ry), start, sweep, startPath);
     }
     else {
       return ctx.invalidArgumentsLength();
@@ -847,7 +935,10 @@ NJS_BIND_CLASS(JSPath2D) {
     return ctx.returnValue(ctx.This());
   }
 
-  static njs::Result ellipticArcToInternal(njs::FunctionCallContext& ctx, JSPath2D* self, bool isRelative) noexcept {
+  NJS_BIND_METHOD(ellipticArcTo) { return ellipticArcToInternal(ctx, self, false); }
+  // NJS_BIND_METHOD(ellipticArcToRel) { return ellipticArcToInternal(ctx, self, true); }
+
+  static njs::Result ellipticArcToInternal(njs::FunctionCallContext& ctx, PathWrap* self, bool isRelative) noexcept {
     unsigned int argc = ctx.argumentsLength();
 
     if (argc == 7) {
@@ -862,10 +953,30 @@ NJS_BIND_CLASS(JSPath2D) {
       NJS_CHECK(ctx.unpackArgument(5, x));
       NJS_CHECK(ctx.unpackArgument(6, y));
 
-      if (!isRelative)
-        self->_obj.svgArcTo(b2d::Point(rx, ry), angle, largeArcFlag, sweepFlag, b2d::Point(x, y));
-      else
-        self->_obj.svgArcToRel(b2d::Point(rx, ry), angle, largeArcFlag, sweepFlag, b2d::Point(x, y));
+      //if (!isRelative)
+        self->_obj.ellipticArcTo(BLPoint(rx, ry), angle, largeArcFlag, sweepFlag, BLPoint(x, y));
+      //else
+      //  self->_obj.svgArcToRel(BLPoint(rx, ry), angle, largeArcFlag, sweepFlag, BLPoint(x, y));
+    }
+    else {
+      return ctx.invalidArgumentsLength();
+    }
+
+    return ctx.returnValue(ctx.This());
+  }
+
+  NJS_BIND_METHOD(arcQuadrantTo) {
+    unsigned int argc = ctx.argumentsLength();
+
+    if (argc == 4) {
+      double x1, y1, x2, y2;
+
+      NJS_CHECK(ctx.unpackArgument(0, x1));
+      NJS_CHECK(ctx.unpackArgument(1, y1));
+      NJS_CHECK(ctx.unpackArgument(2, x2));
+      NJS_CHECK(ctx.unpackArgument(3, y2));
+
+      self->_obj.arcQuadrantTo(x1, y1, x2, y2);
     }
     else {
       return ctx.invalidArgumentsLength();
@@ -887,40 +998,57 @@ NJS_BIND_CLASS(JSPath2D) {
   // [Add]
   // --------------------------------------------------------------------------
 
-  NJS_BIND_METHOD(addBox     ) { return addArg(ctx, self, b2d::kGeomArgBox     ); }
-  NJS_BIND_METHOD(addRect    ) { return addArg(ctx, self, b2d::kGeomArgRect    ); }
-  NJS_BIND_METHOD(addCircle  ) { return addArg(ctx, self, b2d::kGeomArgCircle  ); }
-  NJS_BIND_METHOD(addEllipse ) { return addArg(ctx, self, b2d::kGeomArgEllipse ); }
-  NJS_BIND_METHOD(addRound   ) { return addArg(ctx, self, b2d::kGeomArgRound   ); }
-  NJS_BIND_METHOD(addChord   ) { return addArg(ctx, self, b2d::kGeomArgChord   ); }
-  NJS_BIND_METHOD(addPie     ) { return addArg(ctx, self, b2d::kGeomArgPie     ); }
-  NJS_BIND_METHOD(addTriangle) { return addArg(ctx, self, b2d::kGeomArgTriangle); }
-  NJS_BIND_METHOD(addPolygon ) { return addArg(ctx, self, b2d::kGeomArgPolygon ); }
-  NJS_BIND_METHOD(addPath    ) { return addArg(ctx, self, b2d::kGeomArgPath2D  ); }
+  NJS_BIND_METHOD(addBox      ) { return addGeometry(ctx, self, BL_GEOMETRY_TYPE_BOXD      ); }
+  NJS_BIND_METHOD(addRect     ) { return addGeometry(ctx, self, BL_GEOMETRY_TYPE_RECTD     ); }
+  NJS_BIND_METHOD(addCircle   ) { return addGeometry(ctx, self, BL_GEOMETRY_TYPE_CIRCLE    ); }
+  NJS_BIND_METHOD(addEllipse  ) { return addGeometry(ctx, self, BL_GEOMETRY_TYPE_ELLIPSE   ); }
+  NJS_BIND_METHOD(addRoundRect) { return addGeometry(ctx, self, BL_GEOMETRY_TYPE_ROUND_RECT); }
+  NJS_BIND_METHOD(addChord    ) { return addGeometry(ctx, self, BL_GEOMETRY_TYPE_CHORD     ); }
+  NJS_BIND_METHOD(addPie      ) { return addGeometry(ctx, self, BL_GEOMETRY_TYPE_PIE       ); }
+  NJS_BIND_METHOD(addTriangle ) { return addGeometry(ctx, self, BL_GEOMETRY_TYPE_TRIANGLE  ); }
+  NJS_BIND_METHOD(addPolygon  ) { return addGeometry(ctx, self, BL_GEOMETRY_TYPE_POLYGOND  ); }
+  NJS_BIND_METHOD(addPath     ) { return addGeometry(ctx, self, BL_GEOMETRY_TYPE_PATH      ); }
 
-  static njs::Result addArg(njs::FunctionCallContext& ctx, JSPath2D* self, uint32_t id) noexcept {
-    BlendJSUtils::GeomData data;
-    b2d::MemBufferTmp<1024> mem;
+  NJS_BIND_METHOD(addReversedPath) {
+    uint32_t argc = ctx.argumentsLength();
+    if (argc < 1 || argc > 2)
+      return ctx.invalidArgumentsLength();
 
-    NJS_CHECK(BlendJSUtils::unpackGeomArg(ctx, id, data, mem));
-    self->_obj._addArg(id, &data, nullptr, b2d::Path2D::kDirCW);
+    PathWrap* path;
+    uint32_t reverseMode = BL_PATH_REVERSE_MODE_COMPLETE;
+
+    NJS_CHECK(ctx.unwrapArgument<PathWrap>(0, &path));
+    if (argc == 2) {
+      NJS_CHECK(ctx.unpackArgument(1, reverseMode, Enum_PathReverseMode));
+    }
+
+    self->_obj.addReversedPath(path->_obj, reverseMode);
+    return ctx.returnValue(ctx.This());
+  }
+
+  static njs::Result addGeometry(njs::FunctionCallContext& ctx, PathWrap* self, uint32_t geometryType) noexcept {
+    B2DUtils::GeometryData geometryData;
+    MemBufferTmp<1024> mem;
+
+    NJS_CHECK(B2DUtils::unpackGeometryArg(ctx, geometryType, geometryData, mem));
+    self->_obj.addGeometry(geometryType, &geometryData, nullptr, BL_GEOMETRY_DIRECTION_CW);
 
     return ctx.returnValue(ctx.This());
   }
 };
 
 // ============================================================================
-// [b2djs::JSPattern]
+// [b2djs::PatternWrap]
 // ============================================================================
 
-NJS_BIND_CLASS(JSPattern) {
+NJS_BIND_CLASS(PatternWrap) {
   NJS_BIND_CONSTRUCTOR() {
     unsigned int argc = ctx.argumentsLength();
     if (argc != 1 && argc != 5)
       return ctx.invalidArgumentsLength();
 
-    JSImage* image;
-    NJS_CHECK(ctx.unwrapArgument<JSImage>(0, &image));
+    ImageWrap* image;
+    NJS_CHECK(ctx.unwrapArgument<ImageWrap>(0, &image));
 
     int iw = image->_obj.width();
     int ih = image->_obj.height();
@@ -944,22 +1072,22 @@ NJS_BIND_CLASS(JSPattern) {
       h = ih;
     }
 
-    b2d::Pattern pattern(image->_obj, b2d::IntRect(x, y, w, h));
-    return ctx.returnNew<JSPattern>(pattern);
+    BLPattern pattern(image->_obj, BLRectI(x, y, w, h));
+    return ctx.returnNew<PatternWrap>(pattern);
   }
 
   // --------------------------------------------------------------------------
   // [Accessors]
   // --------------------------------------------------------------------------
 
-  NJS_BIND_GET(extend) {
-    return ctx.returnValue(self->_obj.extend(), Enum_Pattern_Extend);
+  NJS_BIND_GET(extendMode) {
+    return ctx.returnValue(self->_obj.extendMode(), Enum_PatternExtendMode);
   }
 
-  NJS_BIND_SET(extend) {
-    uint32_t extend;
-    NJS_CHECK(ctx.unpackValue(extend, Enum_Pattern_Extend));
-    self->_obj.setExtend(static_cast<uint32_t>(extend));
+  NJS_BIND_SET(extendMode) {
+    uint32_t value;
+    NJS_CHECK(ctx.unpackValue(value, Enum_PatternExtendMode));
+    self->_obj.setExtendMode(value);
     return njs::Globals::kResultOk;
   }
 
@@ -983,7 +1111,7 @@ NJS_BIND_CLASS(JSPattern) {
       return ctx.invalidArgumentsLength();
     }
 
-    self->_obj.setMatrix(b2d::Matrix2D(a, b, c, d, e, f));
+    self->_obj.setMatrix(BLMatrix2D(a, b, c, d, e, f));
     return ctx.returnValue(ctx.This());
   }
 
@@ -992,54 +1120,162 @@ NJS_BIND_CLASS(JSPattern) {
     return ctx.returnValue(ctx.This());
   }
 
-  NJS_BIND_METHOD(translate      ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpTranslateP); }
-  NJS_BIND_METHOD(translateAppend) { return matrixOp(ctx, self, b2d::Matrix2D::kOpTranslateA); }
-  NJS_BIND_METHOD(scale          ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpScaleP    ); }
-  NJS_BIND_METHOD(scaleAppend    ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpScaleA    ); }
-  NJS_BIND_METHOD(skew           ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpSkewP     ); }
-  NJS_BIND_METHOD(skewAppend     ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpSkewA     ); }
-  NJS_BIND_METHOD(rotate         ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpRotateP   ); }
-  NJS_BIND_METHOD(rotateAppend   ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpRotateA   ); }
-  NJS_BIND_METHOD(transform      ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpMultiplyP ); }
-  NJS_BIND_METHOD(transformAppend) { return matrixOp(ctx, self, b2d::Matrix2D::kOpMultiplyA ); }
+  NJS_BIND_METHOD(translate    ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_TRANSLATE     ); }
+  NJS_BIND_METHOD(postTranslate) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_TRANSLATE); }
+  NJS_BIND_METHOD(scale        ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_SCALE         ); }
+  NJS_BIND_METHOD(postScale    ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_SCALE    ); }
+  NJS_BIND_METHOD(skew         ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_SKEW          ); }
+  NJS_BIND_METHOD(postSkew     ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_SKEW     ); }
+  NJS_BIND_METHOD(rotate       ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_ROTATE        ); }
+  NJS_BIND_METHOD(postRotate   ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_ROTATE   ); }
+  NJS_BIND_METHOD(transform    ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_TRANSFORM     ); }
+  NJS_BIND_METHOD(postTransform) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_TRANSFORM); }
 
-  static njs::Result matrixOp(njs::FunctionCallContext& ctx, JSPattern* self, uint32_t op) noexcept {
-    BlendJSUtils::MatrixData data;
+  static njs::Result matrixOp(njs::FunctionCallContext& ctx, PatternWrap* self, uint32_t op) noexcept {
+    BLMatrix2D m;
 
-    NJS_CHECK(BlendJSUtils::unpackMatrixArg(ctx, op, data));
-    self->_obj._matrixOp(op, &data);
+    NJS_CHECK(B2DUtils::unpackMatrixArg(ctx, op, m));
+    self->_obj._applyMatrixOp(op, &m);
 
     return ctx.returnValue(ctx.This());
   }
 };
 
 // ============================================================================
-// [b2djs::JSGradient]
+// [b2djs::GradientWrap]
 // ============================================================================
 
-NJS_BIND_CLASS(JSGradient) {
-  NJS_ABSTRACT_CONSTRUCTOR()
+NJS_BIND_CLASS(GradientWrap) {
+  NJS_BIND_CONSTRUCTOR() {
+    unsigned int argc = ctx.argumentsLength();
+
+    if (argc == 0) {
+      return ctx.returnNew<GradientWrap>();
+    }
+    else {
+      uint32_t type;
+      NJS_CHECK(ctx.unpackArgument(0, type, Enum_GradientType));
+
+      double values[6] {};
+      uint32_t count = 0;
+
+      switch (type) {
+        case BL_GRADIENT_TYPE_LINEAR: count = 4; break;
+        case BL_GRADIENT_TYPE_RADIAL: count = 5; break;
+        case BL_GRADIENT_TYPE_CONICAL: count = 3; break;
+      }
+
+      if (argc != 1) {
+        if (argc - 1 != count)
+          return ctx.invalidArgumentsLength();
+
+        for (uint32_t i = 0; i < count; i++) {
+          NJS_CHECK(ctx.unpackArgument(i + 1, values[i]));
+        }
+      }
+
+      return ctx.returnNew<GradientWrap>(type, values);
+    }
+  }
 
   // --------------------------------------------------------------------------
   // [Accessors]
   // --------------------------------------------------------------------------
 
+  NJS_BIND_GET(type) {
+    uint32_t value = self->_obj.type();
+    return ctx.returnValue(value, Enum_GradientType);
+  }
+
+  NJS_BIND_SET(type) {
+    uint32_t value;
+    NJS_CHECK(ctx.unpackValue(value, Enum_GradientType));
+    self->_obj.setType(value);
+    return njs::Globals::kResultOk;
+  }
+
   NJS_BIND_METHOD(empty) {
-    return ctx.returnValue(self->_obj.stopCount() == 0);
+    return ctx.returnValue(self->_obj.size() == 0);
   }
 
   NJS_BIND_GET(length) {
-    return ctx.returnValue(self->_obj.stopCount());
+    return ctx.returnValue(self->_obj.size());
   }
 
-  NJS_BIND_GET(extend) {
-    return ctx.returnValue(self->_obj.extend(), Enum_Gradient_Extend);
+  NJS_BIND_GET(extendMode) {
+    return ctx.returnValue(self->_obj.extendMode(), Enum_GradientExtendMode);
   }
 
-  NJS_BIND_SET(extend) {
-    uint32_t extend;
-    NJS_CHECK(ctx.unpackValue(extend, Enum_Gradient_Extend));
-    self->_obj.setExtend(static_cast<uint32_t>(extend));
+  NJS_BIND_SET(extendMode) {
+    uint32_t value;
+    NJS_CHECK(ctx.unpackValue(value, Enum_GradientExtendMode));
+    self->_obj.setExtendMode(value);
+    return njs::Globals::kResultOk;
+  }
+
+  NJS_BIND_GET(x0) {
+    return ctx.returnValue(self->_obj.x0());
+  }
+
+  NJS_BIND_SET(x0) {
+    double x0;
+    NJS_CHECK(ctx.unpackValue(x0));
+    self->_obj.setX0(x0);
+    return njs::Globals::kResultOk;
+  }
+
+  NJS_BIND_GET(y0) {
+    return ctx.returnValue(self->_obj.y0());
+  }
+
+  NJS_BIND_SET(y0) {
+    double y0;
+    NJS_CHECK(ctx.unpackValue(y0));
+    self->_obj.setY0(y0);
+    return njs::Globals::kResultOk;
+  }
+
+  NJS_BIND_GET(x1) {
+    return ctx.returnValue(self->_obj.x1());
+  }
+
+  NJS_BIND_SET(x1) {
+    double x1;
+    NJS_CHECK(ctx.unpackValue(x1));
+    self->_obj.setX1(x1);
+    return njs::Globals::kResultOk;
+  }
+
+  NJS_BIND_GET(y1) {
+    return ctx.returnValue(self->_obj.y1());
+  }
+
+  NJS_BIND_SET(y1) {
+    double y1;
+    NJS_CHECK(ctx.unpackValue(y1));
+    self->_obj.setY1(y1);
+    return njs::Globals::kResultOk;
+  }
+
+  NJS_BIND_GET(r0) {
+    return ctx.returnValue(self->_obj.r0());
+  }
+
+  NJS_BIND_SET(r0) {
+    double r0;
+    NJS_CHECK(ctx.unpackValue(r0));
+    self->_obj.setR0(r0);
+    return njs::Globals::kResultOk;
+  }
+
+  NJS_BIND_GET(angle) {
+    return ctx.returnValue(self->_obj.angle());
+  }
+
+  NJS_BIND_SET(angle) {
+    double angle;
+    NJS_CHECK(ctx.unpackValue(angle));
+    self->_obj.setAngle(angle);
     return njs::Globals::kResultOk;
   }
 
@@ -1061,7 +1297,7 @@ NJS_BIND_CLASS(JSGradient) {
       return ctx.invalidArgumentsLength(2);
     }
 
-    self->_obj.addStop(offset, b2d::Argb32(color));
+    self->_obj.addStop(offset, BLRgba32(color));
     return ctx.returnValue(ctx.This());
   }
 
@@ -1085,7 +1321,7 @@ NJS_BIND_CLASS(JSGradient) {
       return ctx.invalidArgumentsLength();
     }
 
-    self->_obj.setMatrix(b2d::Matrix2D(a, b, c, d, e, f));
+    self->_obj.setMatrix(BLMatrix2D(a, b, c, d, e, f));
     return ctx.returnValue(ctx.This());
   }
 
@@ -1094,302 +1330,99 @@ NJS_BIND_CLASS(JSGradient) {
     return ctx.returnValue(ctx.This());
   }
 
-  NJS_BIND_METHOD(translate      ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpTranslateP); }
-  NJS_BIND_METHOD(translateAppend) { return matrixOp(ctx, self, b2d::Matrix2D::kOpTranslateA); }
-  NJS_BIND_METHOD(scale          ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpScaleP    ); }
-  NJS_BIND_METHOD(scaleAppend    ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpScaleA    ); }
-  NJS_BIND_METHOD(skew           ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpSkewP     ); }
-  NJS_BIND_METHOD(skewAppend     ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpSkewA     ); }
-  NJS_BIND_METHOD(rotate         ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpRotateP   ); }
-  NJS_BIND_METHOD(rotateAppend   ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpRotateA   ); }
-  NJS_BIND_METHOD(transform      ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpMultiplyP ); }
-  NJS_BIND_METHOD(transformAppend) { return matrixOp(ctx, self, b2d::Matrix2D::kOpMultiplyA ); }
+  NJS_BIND_METHOD(translate    ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_TRANSLATE     ); }
+  NJS_BIND_METHOD(postTranslate) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_TRANSLATE); }
+  NJS_BIND_METHOD(scale        ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_SCALE         ); }
+  NJS_BIND_METHOD(postScale    ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_SCALE    ); }
+  NJS_BIND_METHOD(skew         ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_SKEW          ); }
+  NJS_BIND_METHOD(postSkew     ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_SKEW     ); }
+  NJS_BIND_METHOD(rotate       ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_ROTATE        ); }
+  NJS_BIND_METHOD(postRotate   ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_ROTATE   ); }
+  NJS_BIND_METHOD(transform    ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_TRANSFORM     ); }
+  NJS_BIND_METHOD(postTransform) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_TRANSFORM); }
 
-  static njs::Result matrixOp(njs::FunctionCallContext& ctx, JSGradient* self, uint32_t op) noexcept {
-    BlendJSUtils::MatrixData data;
+  static njs::Result matrixOp(njs::FunctionCallContext& ctx, GradientWrap* self, uint32_t op) noexcept {
+    BLMatrix2D m;
 
-    NJS_CHECK(BlendJSUtils::unpackMatrixArg(ctx, op, data));
-    self->_obj._matrixOp(op, &data);
+    NJS_CHECK(B2DUtils::unpackMatrixArg(ctx, op, m));
+    self->_obj._applyMatrixOp(op, &m);
 
     return ctx.returnValue(ctx.This());
   }
 };
 
 // ============================================================================
-// [b2djs::JSLinearGradient]
+// [b2djs::FontFaceWrap]
 // ============================================================================
 
-NJS_BIND_CLASS(JSLinearGradient) {
-  NJS_BIND_CONSTRUCTOR() {
-    unsigned int argc = ctx.argumentsLength();
-
-    if (argc == 0) {
-      return ctx.returnNew<JSLinearGradient>();
-    }
-    else if (argc == 4) {
-      double x0, y0, x1, y1;
-      NJS_CHECK(ctx.unpackArgument(0, x0));
-      NJS_CHECK(ctx.unpackArgument(1, y0));
-      NJS_CHECK(ctx.unpackArgument(2, x1));
-      NJS_CHECK(ctx.unpackArgument(3, y1));
-      return ctx.returnNew<JSLinearGradient>(x0, y0, x1, y1);
-    }
-    else {
-      return ctx.invalidArgumentsLength();
-    }
-  }
-
-  // --------------------------------------------------------------------------
-  // [Accessors]
-  // --------------------------------------------------------------------------
-
-  NJS_BIND_GET(x0) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdLinearX0));
-  }
-
-  NJS_BIND_SET(x0) {
-    double x0;
-    NJS_CHECK(ctx.unpackValue(x0));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdLinearX0, x0);
-    return njs::Globals::kResultOk;
-  }
-
-  NJS_BIND_GET(y0) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdLinearY0));
-  }
-
-  NJS_BIND_SET(y0) {
-    double y0;
-    NJS_CHECK(ctx.unpackValue(y0));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdLinearY0, y0);
-    return njs::Globals::kResultOk;
-  }
-
-  NJS_BIND_GET(x1) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdLinearX1));
-  }
-
-  NJS_BIND_SET(x1) {
-    double x1;
-    NJS_CHECK(ctx.unpackValue(x1));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdLinearX1, x1);
-    return njs::Globals::kResultOk;
-  }
-
-  NJS_BIND_GET(y1) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdLinearY1));
-  }
-
-  NJS_BIND_SET(y1) {
-    double y1;
-    NJS_CHECK(ctx.unpackValue(y1));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdLinearY1, y1);
-    return njs::Globals::kResultOk;
-  }
-};
-
-// ============================================================================
-// [b2djs::JSRadialGradient]
-// ============================================================================
-
-NJS_BIND_CLASS(JSRadialGradient) {
-  NJS_BIND_CONSTRUCTOR() {
-    unsigned int argc = ctx.argumentsLength();
-
-    if (argc == 0) {
-      return ctx.returnNew<JSRadialGradient>();
-    }
-    else if (argc == 5) {
-      double cx, cy, fx, fy, cr;
-      NJS_CHECK(ctx.unpackArgument(0, cx));
-      NJS_CHECK(ctx.unpackArgument(1, cy));
-      NJS_CHECK(ctx.unpackArgument(2, fx));
-      NJS_CHECK(ctx.unpackArgument(3, fy));
-      NJS_CHECK(ctx.unpackArgument(4, cr));
-      return ctx.returnNew<JSRadialGradient>(cx, cy, fx, fy, cr);
-    }
-    else {
-      return ctx.invalidArgumentsLength();
-    }
-  }
-
-  // --------------------------------------------------------------------------
-  // [Accessors]
-  // --------------------------------------------------------------------------
-
-  NJS_BIND_GET(cx) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdRadialCx));
-  }
-
-  NJS_BIND_SET(cx) {
-    double cx;
-    NJS_CHECK(ctx.unpackValue(cx));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdRadialCx, cx);
-    return njs::Globals::kResultOk;
-  }
-
-  NJS_BIND_GET(cy) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdRadialCy));
-  }
-
-  NJS_BIND_SET(cy) {
-    double cy;
-    NJS_CHECK(ctx.unpackValue(cy));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdRadialCy, cy);
-    return njs::Globals::kResultOk;
-  }
-
-  NJS_BIND_GET(fx) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdRadialFx));
-  }
-
-  NJS_BIND_SET(fx) {
-    double fx;
-    NJS_CHECK(ctx.unpackValue(fx));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdRadialFx, fx);
-    return njs::Globals::kResultOk;
-  }
-
-  NJS_BIND_GET(fy) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdRadialFy));
-  }
-
-  NJS_BIND_SET(fy) {
-    double fy;
-    NJS_CHECK(ctx.unpackValue(fy));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdRadialFy, fy);
-    return njs::Globals::kResultOk;
-  }
-
-  NJS_BIND_GET(cr) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdRadialCr));
-  }
-
-  NJS_BIND_SET(cr) {
-    double cr;
-    NJS_CHECK(ctx.unpackValue(cr));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdRadialCr, cr);
-    return njs::Globals::kResultOk;
-  }
-};
-
-// ============================================================================
-// [b2djs::JSConicalGradient]
-// ============================================================================
-
-NJS_BIND_CLASS(JSConicalGradient) {
-  NJS_BIND_CONSTRUCTOR() {
-    unsigned int argc = ctx.argumentsLength();
-
-    if (argc == 0) {
-      return ctx.returnNew<JSConicalGradient>();
-    }
-    else if (argc == 3) {
-      double cx, cy, angle;
-      NJS_CHECK(ctx.unpackArgument(0, cx));
-      NJS_CHECK(ctx.unpackArgument(1, cy));
-      NJS_CHECK(ctx.unpackArgument(2, angle));
-      return ctx.returnNew<JSConicalGradient>(cx, cy, angle);
-    }
-    else {
-      return ctx.invalidArgumentsLength();
-    }
-  }
-
-  // --------------------------------------------------------------------------
-  // [Accessors]
-  // --------------------------------------------------------------------------
-
-  NJS_BIND_GET(cx) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdConicalCx));
-  }
-
-  NJS_BIND_SET(cx) {
-    double cx;
-    NJS_CHECK(ctx.unpackValue(cx));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdConicalCx, cx);
-    return njs::Globals::kResultOk;
-  }
-
-  NJS_BIND_GET(cy) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdConicalCy));
-  }
-
-  NJS_BIND_SET(cy) {
-    double cy;
-    NJS_CHECK(ctx.unpackValue(cy));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdConicalCy, cy);
-    return njs::Globals::kResultOk;
-  }
-
-  NJS_BIND_GET(angle) {
-    return ctx.returnValue(self->_obj.scalar(b2d::Gradient::kScalarIdConicalAngle));
-  }
-
-  NJS_BIND_SET(angle) {
-    double angle;
-    NJS_CHECK(ctx.unpackValue(angle));
-    self->_obj.setScalar(b2d::Gradient::kScalarIdConicalAngle, angle);
-    return njs::Globals::kResultOk;
-  }
-};
-
-// ============================================================================
-// [b2djs::JSFontFace]
-// ============================================================================
-
-static njs::Result storeDesignMetrics(njs::ExecutionContext& ctx, njs::Value& dst, const b2d::FontDesignMetrics& dm) noexcept {
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("ascent"                )), ctx.newValue(dm.ascent())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("descent"               )), ctx.newValue(dm.descent())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("lineGap"               )), ctx.newValue(dm.lineGap())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("xHeight"               )), ctx.newValue(dm.xHeight())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("capHeight"             )), ctx.newValue(dm.capHeight())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vertAscent"            )), ctx.newValue(dm.vertAscent())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vertDescent"           )), ctx.newValue(dm.vertDescent())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("minLeftSideBearing"    )), ctx.newValue(dm.minLeftSideBearing())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("minRightSideBearing"   )), ctx.newValue(dm.minRightSideBearing())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("minTopSideBearing"     )), ctx.newValue(dm.minTopSideBearing())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("minBottomSideBearing"  )), ctx.newValue(dm.minBottomSideBearing())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("maxAdvanceWidth"       )), ctx.newValue(dm.maxAdvanceWidth())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("maxAdvanceHeight"      )), ctx.newValue(dm.maxAdvanceHeight())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("underlinePosition"     )), ctx.newValue(dm.underlinePosition())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("underlineThickness"    )), ctx.newValue(dm.underlineThickness())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("strikethroughPosition" )), ctx.newValue(dm.strikethroughPosition())));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("strikethroughThickness")), ctx.newValue(dm.strikethroughThickness())));
+static njs::Result storeDesignMetrics(njs::ExecutionContext& ctx, njs::Value& dst, const BLFontDesignMetrics& dm) noexcept {
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("ascent"                )), ctx.newValue(dm.ascent)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("descent"               )), ctx.newValue(dm.descent)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("lineGap"               )), ctx.newValue(dm.lineGap)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("xHeight"               )), ctx.newValue(dm.xHeight)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("capHeight"             )), ctx.newValue(dm.capHeight)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vAscent"               )), ctx.newValue(dm.vAscent)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vDescent"              )), ctx.newValue(dm.vDescent)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("hMinLSB"               )), ctx.newValue(dm.hMinLSB)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vMinLSB"               )), ctx.newValue(dm.vMinLSB)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("hMinTSB"               )), ctx.newValue(dm.hMinTSB)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vMinTSB"               )), ctx.newValue(dm.vMinTSB)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("hMaxAdvance"           )), ctx.newValue(dm.hMaxAdvance)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vMaxAdvance"           )), ctx.newValue(dm.hMaxAdvance)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("underlinePosition"     )), ctx.newValue(dm.underlinePosition)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("underlineThickness"    )), ctx.newValue(dm.underlineThickness)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("strikethroughPosition" )), ctx.newValue(dm.strikethroughPosition)));
+  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("strikethroughThickness")), ctx.newValue(dm.strikethroughThickness)));
 
   return njs::Globals::kResultOk;
 }
 
-static njs::Result storeDiagnosticsInfo(njs::ExecutionContext& ctx, njs::Value& dst, const b2d::FontDiagnosticsInfo& info) noexcept {
+static njs::Result storeDiagInfo(njs::ExecutionContext& ctx, njs::Value& dst, uint32_t diagFlags) noexcept {
   #define ADD_DIAG_FLAG(NAME, FLAG)                                                   \
     ctx.setProperty(dst,                                                              \
                     ctx.newInternalizedString(njs::Latin1Ref(NAME)),                  \
-                    ctx.newValue((info.flags() & b2d::FontDiagnosticsInfo::FLAG) != 0))
+                    ctx.newValue((diagFlags & FLAG) != 0))
 
-  NJS_CHECK(ADD_DIAG_FLAG("cmapDefectiveData"    , kFlagCMapDefectiveData));
-  NJS_CHECK(ADD_DIAG_FLAG("cmapUnsupportedFormat", kFlagCMapUnsupportedFormat));
-  NJS_CHECK(ADD_DIAG_FLAG("kernUnsortedPairs"    , kFlagKernUnsortedPairs));
-  NJS_CHECK(ADD_DIAG_FLAG("kernTruncatedData"    , kFlagKernTruncatedData));
-  NJS_CHECK(ADD_DIAG_FLAG("kernUnknownFormat"    , kFlagKernUnknownFormat));
-  NJS_CHECK(ADD_DIAG_FLAG("nameDefectiveData"    , kFlagNameDefectiveData));
-  NJS_CHECK(ADD_DIAG_FLAG("nameRedundantFamily"  , kFlagNameRedundantSubfamily));
+  NJS_CHECK(ADD_DIAG_FLAG("wrongNameData", BL_FONT_FACE_DIAG_WRONG_NAME_DATA));
+  NJS_CHECK(ADD_DIAG_FLAG("fixedNameData", BL_FONT_FACE_DIAG_FIXED_NAME_DATA));
+  NJS_CHECK(ADD_DIAG_FLAG("wrongKernData", BL_FONT_FACE_DIAG_WRONG_KERN_DATA));
+  NJS_CHECK(ADD_DIAG_FLAG("fixedKernData", BL_FONT_FACE_DIAG_FIXED_KERN_DATA));
+  NJS_CHECK(ADD_DIAG_FLAG("wrongCMapData", BL_FONT_FACE_DIAG_WRONG_CMAP_DATA));
+  NJS_CHECK(ADD_DIAG_FLAG("fixedCMapData", BL_FONT_FACE_DIAG_WRONG_CMAP_FORMAT));
+  NJS_CHECK(ADD_DIAG_FLAG("wrongGDefData", BL_FONT_FACE_DIAG_WRONG_GDEF_DATA));
+  NJS_CHECK(ADD_DIAG_FLAG("wrongGPosData", BL_FONT_FACE_DIAG_WRONG_GPOS_DATA));
+  NJS_CHECK(ADD_DIAG_FLAG("wrongGSubData", BL_FONT_FACE_DIAG_WRONG_GSUB_DATA));
 
   #undef ADD_DIAG_FLAG
 
   return njs::Globals::kResultOk;
 }
 
-NJS_BIND_CLASS(JSFontFace) {
+static njs::Result tagsToJSArray(njs::ExecutionContext& ctx, njs::Value& dst, const BLArray<uint32_t>& tags) noexcept {
+  uint32_t count = unsigned(tags.size());
+  dst = ctx.newArray();
+  NJS_CHECK(dst);
+
+  for (uint32_t i = 0; i < count; i++) {
+    njs::Value s = ctx.newUint32(tags[i]);
+    NJS_CHECK(s);
+    NJS_CHECK(ctx.setPropertyAt(dst, i, s));
+  }
+
+  return njs::Globals::kResultOk;
+}
+
+NJS_BIND_CLASS(FontFaceWrap) {
   NJS_BIND_CONSTRUCTOR() {
-    return ctx.returnNew<JSFontFace>();
+    return ctx.returnNew<FontFaceWrap>();
   }
 
   // --------------------------------------------------------------------------
   // [Accessors]
   // --------------------------------------------------------------------------
 
-  NJS_BIND_GET(implType) {
-    return ctx.returnValue(self->_obj.implType(), Enum_FontFace_ImplType);
+  NJS_BIND_GET(faceType) {
+    return ctx.returnValue(self->_obj.faceType(), Enum_FontFaceType);
   }
 
   NJS_BIND_GET(faceIndex) {
@@ -1436,10 +1469,10 @@ NJS_BIND_CLASS(JSFontFace) {
     return ctx.returnValue(str);
   }
 
-  NJS_BIND_GET(diagnosticsInfo) {
+  NJS_BIND_GET(diagInfo) {
     njs::Value dmObj = ctx.newObject();
     NJS_CHECK(dmObj);
-    NJS_CHECK(storeDiagnosticsInfo(ctx, dmObj, self->_obj.diagnosticsInfo()));
+    NJS_CHECK(storeDiagInfo(ctx, dmObj, self->_obj.diagFlags()));
     return ctx.returnValue(dmObj);
   }
 
@@ -1464,42 +1497,37 @@ NJS_BIND_CLASS(JSFontFace) {
       return ctx.invalidArgument(0);
 
     char fileName[1024];
-    int size = arg.readUtf8(fileName, sizeof(fileName) - 1);
+    int size = ctx.readUtf8(arg, fileName, sizeof(fileName) - 1);
     fileName[size] = '\0';
 
-    b2d::Error err = self->_obj.createFromFile(fileName);
+    BLResult err = self->_obj.createFromFile(fileName);
     return ctx.returnValue(err);
   }
 
+  /*
   NJS_BIND_METHOD(listTags) {
-    b2d::Array<uint32_t> tags;
-    self->_obj.listTags(tags);
+    NJS_CHECK(ctx.verifyArgumentsLength(1));
 
-    uint32_t count = unsigned(tags.size());
-    char tagData[8] = { 0 };
+    uint32_t category;
+    NJS_CHECK(ctx.unpackArgument(0, category, Enum_FontTag_Category));
 
-    njs::Value arr = ctx.newArray();
-    NJS_CHECK(arr);
+    BLArray<uint32_t> tags;
+    self->_obj.listTags(category, tags);
 
-    for (uint32_t i = 0; i < count; i++) {
-      std::memcpy(tagData, &tags[i], 4);
-
-      njs::Value s = ctx.newString(njs::Latin1Ref(tagData));
-      NJS_CHECK(s);
-      NJS_CHECK(ctx.setPropertyAt(arr, i, s));
-    }
-
-    return ctx.returnValue(arr);
+    njs::Value out;
+    NJS_CHECK(tagsToJSArray(ctx, out, tags));
+    return ctx.returnValue(out);
   }
+  */
 };
 
 // ============================================================================
-// [b2djs::JSFont]
+// [b2djs::FontWrap]
 // ============================================================================
 
-NJS_BIND_CLASS(JSFont) {
+NJS_BIND_CLASS(FontWrap) {
   NJS_BIND_CONSTRUCTOR() {
-    return ctx.returnNew<JSFont>();
+    return ctx.returnNew<FontWrap>();
   }
 
   // --------------------------------------------------------------------------
@@ -1510,7 +1538,7 @@ NJS_BIND_CLASS(JSFont) {
     njs::Value FontFaceClass = ctx.propertyOf(njs::Value(ctx.v8CallbackInfo().Data()), njs::Utf8Ref("FontFace"));
     njs::Value obj = ctx.newInstance(FontFaceClass);
 
-    JSFontFace* wrap = ctx.unwrapUnsafe<JSFontFace>(obj);
+    FontFaceWrap* wrap = ctx.unwrapUnsafe<FontFaceWrap>(obj);
     wrap->_obj = self->_obj.face();
     return ctx.returnValue(obj);
   }
@@ -1531,21 +1559,21 @@ NJS_BIND_CLASS(JSFont) {
   }
 
   NJS_BIND_GET(metrics) {
-    const b2d::FontMetrics& m = self->_obj.metrics();
+    const BLFontMetrics& m = self->_obj.metrics();
 
     njs::Value mObj = ctx.newObject();
     NJS_CHECK(mObj);
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("ascent"                )), ctx.newValue(m.ascent())));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("descent"               )), ctx.newValue(m.descent())));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("lineGap"               )), ctx.newValue(m.lineGap())));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("xHeight"               )), ctx.newValue(m.xHeight())));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("capHeight"             )), ctx.newValue(m.capHeight())));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("vertAscent"            )), ctx.newValue(m.vertAscent())));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("vertDescent"           )), ctx.newValue(m.vertDescent())));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("underlinePosition"     )), ctx.newValue(m.underlinePosition())));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("underlineThickness"    )), ctx.newValue(m.underlineThickness())));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("strikethroughPosition" )), ctx.newValue(m.strikethroughPosition())));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("strikethroughThickness")), ctx.newValue(m.strikethroughThickness())));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("ascent"                )), ctx.newValue(m.ascent)));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("descent"               )), ctx.newValue(m.descent)));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("lineGap"               )), ctx.newValue(m.lineGap)));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("xHeight"               )), ctx.newValue(m.xHeight)));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("capHeight"             )), ctx.newValue(m.capHeight)));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("vAscent"               )), ctx.newValue(m.vAscent)));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("vDescent"              )), ctx.newValue(m.vDescent)));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("underlinePosition"     )), ctx.newValue(m.underlinePosition)));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("underlineThickness"    )), ctx.newValue(m.underlineThickness)));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("strikethroughPosition" )), ctx.newValue(m.strikethroughPosition)));
+    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("strikethroughThickness")), ctx.newValue(m.strikethroughThickness)));
 
     return ctx.returnValue(mObj);
   }
@@ -1559,33 +1587,33 @@ NJS_BIND_CLASS(JSFont) {
     if (argc != 2)
       return ctx.invalidArgumentsLength(2);
 
-    JSFontFace* face;
-    NJS_CHECK(ctx.unwrapArgument<JSFontFace>(0, &face));
+    FontFaceWrap* face;
+    NJS_CHECK(ctx.unwrapArgument<FontFaceWrap>(0, &face));
 
     double size;
     NJS_CHECK(ctx.unpackArgument(1, size));
 
-    b2d::Error err = self->_obj.createFromFace(face->_obj, size);
+    BLResult err = self->_obj.createFromFace(face->_obj, size);
     return ctx.returnValue(err);
   }
 };
 
 // ============================================================================
-// [b2djs::JSContext2D]
+// [b2djs::ContextWrap]
 // ============================================================================
 
-NJS_BIND_CLASS(JSContext2D) {
+NJS_BIND_CLASS(ContextWrap) {
   NJS_BIND_CONSTRUCTOR() {
     NJS_CHECK(ctx.verifyArgumentsLength(0, 1));
     unsigned int argc = ctx.argumentsLength();
 
     if (argc == 1) {
-      JSImage* image;
-      NJS_CHECK(ctx.unwrapArgument<JSImage>(0, &image));
-      return ctx.returnNew<JSContext2D>(image->_obj);
+      ImageWrap* image;
+      NJS_CHECK(ctx.unwrapArgument<ImageWrap>(0, &image));
+      return ctx.returnNew<ContextWrap>(image->_obj);
     }
     else {
-      return ctx.returnNew<JSContext2D>();
+      return ctx.returnNew<ContextWrap>();
     }
   }
 
@@ -1597,16 +1625,16 @@ NJS_BIND_CLASS(JSContext2D) {
     return ctx.returnValue(self->_obj.isNone());
   }
 
-  NJS_BIND_GET(implType) {
-    return ctx.returnValue(self->_obj.implType(), Enum_Context2D_ImplType);
+  NJS_BIND_GET(contextType) {
+    return ctx.returnValue(self->_obj.contextType(), Enum_ContextType);
   }
 
   NJS_BIND_GET(targetWidth) {
-    return ctx.returnValue(self->_obj.impl()->_targetSizeD._w);
+    return ctx.returnValue(self->_obj.targetWidth());
   }
 
   NJS_BIND_GET(targetHeight) {
-    return ctx.returnValue(self->_obj.impl()->_targetSizeD._h);
+    return ctx.returnValue(self->_obj.targetHeight());
   }
 
   // --------------------------------------------------------------------------
@@ -1616,8 +1644,8 @@ NJS_BIND_CLASS(JSContext2D) {
   NJS_BIND_METHOD(begin) {
     NJS_CHECK(ctx.verifyArgumentsLength(1));
 
-    JSImage* image;
-    NJS_CHECK(ctx.unwrapArgument<JSImage>(0, &image));
+    ImageWrap* image;
+    NJS_CHECK(ctx.unwrapArgument<ImageWrap>(0, &image));
 
     self->_obj.begin(image->_obj);
     return ctx.returnValue(ctx.This());
@@ -1632,55 +1660,51 @@ NJS_BIND_CLASS(JSContext2D) {
   // [Global Params]
   // --------------------------------------------------------------------------
 
-  NJS_BIND_GET(tolerance) {
-    double tolerance = 0.0;
-    self->_obj.getTolerance(tolerance);
+  NJS_BIND_GET(flattenTolerance) {
+    double tolerance = self->_obj.flattenTolerance();
     return ctx.returnValue(tolerance);
   }
 
-  NJS_BIND_SET(tolerance) {
+  NJS_BIND_SET(flattenTolerance) {
     double tolerance;
     NJS_CHECK(ctx.unpackValue(tolerance));
-    self->_obj.setTolerance(tolerance);
+    self->_obj.setFlattenTolerance(tolerance);
     return njs::Globals::kResultOk;
   }
 
   NJS_BIND_GET(compOp) {
-    uint32_t compOp;
-    self->_obj.getCompOp(compOp);
-    return ctx.returnValue(compOp, Enum_CompOp_Id);
+    uint32_t compOp = self->_obj.compOp();
+    return ctx.returnValue(compOp, Enum_CompOp);
   }
 
   NJS_BIND_SET(compOp) {
     uint32_t compOp;
-    NJS_CHECK(ctx.unpackValue(compOp, Enum_CompOp_Id));
+    NJS_CHECK(ctx.unpackValue(compOp, Enum_CompOp));
     self->_obj.setCompOp(compOp);
     return njs::Globals::kResultOk;
   }
 
   NJS_BIND_GET(alpha) {
-    double alpha = 0.0;
-    self->_obj.getAlpha(alpha);
+    double alpha = self->_obj.globalAlpha();
     return ctx.returnValue(alpha);
   }
 
   NJS_BIND_SET(alpha) {
     double alpha;
     NJS_CHECK(ctx.unpackValue(alpha));
-    self->_obj.setAlpha(alpha);
+    self->_obj.setGlobalAlpha(alpha);
     return njs::Globals::kResultOk;
   }
 
-  NJS_BIND_GET(patternFilter) {
-    uint32_t filter;
-    self->_obj.getPatternFilter(filter);
-    return ctx.returnValue(filter, Enum_Pattern_Filter);
+  NJS_BIND_GET(patternQuality) {
+    uint32_t quality = self->_obj.hints().patternQuality;
+    return ctx.returnValue(quality, Enum_PatternQuality);
   }
 
-  NJS_BIND_SET(patternFilter) {
-    int filter;
-    NJS_CHECK(ctx.unpackValue(filter, Enum_Pattern_Filter));
-    self->_obj.setPatternFilter(static_cast<uint32_t>(filter));
+  NJS_BIND_SET(patternQuality) {
+    uint32_t quality;
+    NJS_CHECK(ctx.unpackValue(quality, Enum_PatternQuality));
+    self->_obj.setPatternQuality(quality);
     return njs::Globals::kResultOk;
   }
 
@@ -1689,8 +1713,7 @@ NJS_BIND_CLASS(JSContext2D) {
   // --------------------------------------------------------------------------
 
   NJS_BIND_GET(fillAlpha) {
-    double alpha = 0.0;
-    self->_obj.getFillAlpha(alpha);
+    double alpha = self->_obj.fillAlpha();
     return ctx.returnValue(alpha);
   }
 
@@ -1702,8 +1725,7 @@ NJS_BIND_CLASS(JSContext2D) {
   }
 
   NJS_BIND_GET(strokeAlpha) {
-    double alpha = 0.0;
-    self->_obj.getStrokeAlpha(alpha);
+    double alpha = self->_obj.strokeAlpha();
     return ctx.returnValue(alpha);
   }
 
@@ -1718,41 +1740,43 @@ NJS_BIND_CLASS(JSContext2D) {
   // [Fill & Stroke Style]
   // --------------------------------------------------------------------------
 
-  NJS_BIND_GET(fillStyle) { return getStyle(ctx, self, b2d::Context2D::kStyleSlotFill); }
-  NJS_BIND_SET(fillStyle) { return setStyle(ctx, self, b2d::Context2D::kStyleSlotFill); }
+  NJS_BIND_GET(fillStyle) { return getOpStyle(ctx, self, BL_CONTEXT_OP_TYPE_FILL); }
+  NJS_BIND_SET(fillStyle) { return setOpStyle(ctx, self, BL_CONTEXT_OP_TYPE_FILL); }
 
-  NJS_BIND_GET(strokeStyle) { return getStyle(ctx, self, b2d::Context2D::kStyleSlotStroke); }
-  NJS_BIND_SET(strokeStyle) { return setStyle(ctx, self, b2d::Context2D::kStyleSlotStroke); }
+  NJS_BIND_GET(strokeStyle) { return getOpStyle(ctx, self, BL_CONTEXT_OP_TYPE_STROKE); }
+  NJS_BIND_SET(strokeStyle) { return setOpStyle(ctx, self, BL_CONTEXT_OP_TYPE_STROKE); }
 
-  static njs::Result getStyle(njs::GetPropertyContext& ctx, JSContext2D* self, uint32_t slot) noexcept {
-    b2d::Argb32 color;
-
-    if (self->_obj.getStyle(slot, color) == b2d::kErrorOk)
-      return ctx.returnValue(color.value(), ColorConcept());
+  static njs::Result getOpStyle(njs::GetPropertyContext& ctx, ContextWrap* self, uint32_t slot) noexcept {
+    // TODO:
+    /*
+    BLRgba32 rgba;
+    if (self->_obj.getStyle(slot, rgba) == BL_SUCCESS)
+      return ctx.returnValue(rgba.value, ColorConcept());
+    */
 
     return ctx.returnValue(njs::Undefined);
   }
 
-  static njs::Result setStyle(njs::SetPropertyContext& ctx, JSContext2D* self, uint32_t slot) noexcept {
+  static njs::Result setOpStyle(njs::SetPropertyContext& ctx, ContextWrap* self, uint32_t opType) noexcept {
     njs::Value value = ctx.propertyValue();
 
     if (value.isNumber()) {
-      double d = value.doubleValue();
-      uint32_t color = static_cast<uint32_t>(d);
-      self->_obj.setStyle(slot, b2d::Argb32(color));
+      double d = ctx.doubleValue(value);
+      uint32_t rgba = static_cast<uint32_t>(d);
+      self->_obj.setOpStyle(opType, BLRgba32(rgba));
     }
     else if (value.isString()) {
-      uint32_t color;
-      NJS_CHECK(ctx.unpack(value, color, ColorConcept()));
-      self->_obj.setStyle(slot, b2d::Argb32(color));
+      uint32_t rgba;
+      NJS_CHECK(ctx.unpack(value, rgba, ColorConcept()));
+      self->_obj.setOpStyle(opType, BLRgba32(rgba));
     }
-    else if (ctx.isWrapped<JSGradient>(value)) {
-      JSGradient* style = ctx.unwrapUnsafe<JSGradient>(value);
-      self->_obj.setStyle(slot, style->_obj);
+    else if (ctx.isWrapped<GradientWrap>(value)) {
+      GradientWrap* gradient = ctx.unwrapUnsafe<GradientWrap>(value);
+      self->_obj.setOpStyle(opType, gradient->_obj);
     }
-    else if (ctx.isWrapped<JSPattern>(value)) {
-      JSPattern* style = ctx.unwrapUnsafe<JSPattern>(value);
-      self->_obj.setStyle(slot, style->_obj);
+    else if (ctx.isWrapped<PatternWrap>(value)) {
+      PatternWrap* pattern = ctx.unwrapUnsafe<PatternWrap>(value);
+      self->_obj.setOpStyle(opType, pattern->_obj);
     }
     else {
       return njs::Globals::kResultInvalidValue;
@@ -1766,21 +1790,19 @@ NJS_BIND_CLASS(JSContext2D) {
   // --------------------------------------------------------------------------
 
   NJS_BIND_GET(fillRule) {
-    uint32_t fillRule;
-    self->_obj.getFillRule(fillRule);
+    uint32_t fillRule = self->_obj.fillRule();
     return ctx.returnValue(fillRule, Enum_FillRule);
   }
 
   NJS_BIND_SET(fillRule) {
     uint32_t fillRule;
     NJS_CHECK(ctx.unpackValue(fillRule, Enum_FillRule));
-    self->_obj.setFillRule(static_cast<uint32_t>(fillRule));
+    self->_obj.setFillRule(fillRule);
     return njs::Globals::kResultOk;
   }
 
   NJS_BIND_GET(strokeWidth) {
-    double strokeWidth = 0.0;
-    self->_obj.getStrokeWidth(strokeWidth);
+    double strokeWidth = self->_obj.strokeWidth();
     return ctx.returnValue(strokeWidth);
   }
 
@@ -1791,35 +1813,32 @@ NJS_BIND_CLASS(JSContext2D) {
     return njs::Globals::kResultOk;
   }
 
-  NJS_BIND_GET(miterLimit) {
-    double miterLimit = 0.0;
-    self->_obj.getMiterLimit(miterLimit);
+  NJS_BIND_GET(strokeMiterLimit) {
+    double miterLimit = self->_obj.strokeMiterLimit();
     return ctx.returnValue(miterLimit);
   }
 
-  NJS_BIND_SET(miterLimit) {
+  NJS_BIND_SET(strokeMiterLimit) {
     double miterLimit;
     NJS_CHECK(ctx.unpackValue(miterLimit));
-    self->_obj.setMiterLimit(miterLimit);
+    self->_obj.setStrokeMiterLimit(miterLimit);
     return njs::Globals::kResultOk;
   }
 
-  NJS_BIND_GET(dashOffset) {
-    double dashOffset = 0.0;
-    self->_obj.getDashOffset(dashOffset);
+  NJS_BIND_GET(strokeDashOffset) {
+    double dashOffset = self->_obj.strokeDashOffset();
     return ctx.returnValue(dashOffset);
   }
 
-  NJS_BIND_SET(dashOffset) {
+  NJS_BIND_SET(strokeDashOffset) {
     double dashOffset;
     NJS_CHECK(ctx.unpackValue(dashOffset));
-    self->_obj.setDashOffset(dashOffset);
+    self->_obj.setStrokeDashOffset(dashOffset);
     return njs::Globals::kResultOk;
   }
 
   NJS_BIND_GET(strokeJoin) {
-    uint32_t strokeJoin;
-    self->_obj.getStrokeJoin(strokeJoin);
+    uint32_t strokeJoin = self->_obj.strokeJoin();
     return ctx.returnValue(strokeJoin, Enum_StrokeJoin);
   }
 
@@ -1830,42 +1849,39 @@ NJS_BIND_CLASS(JSContext2D) {
     return njs::Globals::kResultOk;
   }
 
-  NJS_BIND_GET(startCap) {
-    uint32_t startCap;
-    self->_obj.getStartCap(startCap);
+  NJS_BIND_GET(strokeStartCap) {
+    uint32_t startCap = self->_obj.strokeStartCap();
     return ctx.returnValue(startCap, Enum_StrokeCap);
   }
 
-  NJS_BIND_SET(startCap) {
+  NJS_BIND_SET(strokeStartCap) {
     uint32_t startCap;
     NJS_CHECK(ctx.unpackValue(startCap, Enum_StrokeCap));
-    self->_obj.setStartCap(startCap);
+    self->_obj.setStrokeStartCap(startCap);
     return njs::Globals::kResultOk;
   }
 
-  NJS_BIND_GET(endCap) {
-    uint32_t endCap;
-    self->_obj.getEndCap(endCap);
+  NJS_BIND_GET(strokeEndCap) {
+    uint32_t endCap = self->_obj.strokeEndCap();
     return ctx.returnValue(endCap, Enum_StrokeCap);
   }
 
-  NJS_BIND_SET(endCap) {
+  NJS_BIND_SET(strokeEndCap) {
     uint32_t endCap;
     NJS_CHECK(ctx.unpackValue(endCap, Enum_StrokeCap));
-    self->_obj.setEndCap(static_cast<uint32_t>(endCap));
+    self->_obj.setStrokeEndCap(static_cast<uint32_t>(endCap));
     return njs::Globals::kResultOk;
   }
 
   NJS_BIND_GET(strokeTransformOrder) {
-    uint32_t tOrder;
-    self->_obj.getEndCap(tOrder);
-    return ctx.returnValue(tOrder, Enum_StrokeTransformOrder);
+    uint32_t order = self->_obj.strokeTransformOrder();
+    return ctx.returnValue(order, Enum_StrokeTransformOrder);
   }
 
   NJS_BIND_SET(strokeTransformOrder) {
-    uint32_t tOrder;
-    NJS_CHECK(ctx.unpackValue(tOrder, Enum_StrokeTransformOrder));
-    self->_obj.setStrokeTransformOrder(static_cast<uint32_t>(tOrder));
+    uint32_t order;
+    NJS_CHECK(ctx.unpackValue(order, Enum_StrokeTransformOrder));
+    self->_obj.setStrokeTransformOrder(order);
     return njs::Globals::kResultOk;
   }
 
@@ -1889,7 +1905,7 @@ NJS_BIND_CLASS(JSContext2D) {
       return ctx.invalidArgumentsLength();
     }
 
-    self->_obj.setMatrix(b2d::Matrix2D(a, b, c, d, e, f));
+    self->_obj.setMatrix(BLMatrix2D(a, b, c, d, e, f));
     return ctx.returnValue(ctx.This());
   }
 
@@ -1903,22 +1919,22 @@ NJS_BIND_CLASS(JSContext2D) {
     return ctx.returnValue(ctx.This());
   }
 
-  NJS_BIND_METHOD(translate      ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpTranslateP); }
-  NJS_BIND_METHOD(translateAppend) { return matrixOp(ctx, self, b2d::Matrix2D::kOpTranslateA); }
-  NJS_BIND_METHOD(scale          ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpScaleP    ); }
-  NJS_BIND_METHOD(scaleAppend    ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpScaleA    ); }
-  NJS_BIND_METHOD(skew           ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpSkewP     ); }
-  NJS_BIND_METHOD(skewAppend     ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpSkewA     ); }
-  NJS_BIND_METHOD(rotate         ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpRotateP   ); }
-  NJS_BIND_METHOD(rotateAppend   ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpRotateA   ); }
-  NJS_BIND_METHOD(transform      ) { return matrixOp(ctx, self, b2d::Matrix2D::kOpMultiplyP ); }
-  NJS_BIND_METHOD(transformAppend) { return matrixOp(ctx, self, b2d::Matrix2D::kOpMultiplyA ); }
+  NJS_BIND_METHOD(translate    ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_TRANSLATE     ); }
+  NJS_BIND_METHOD(postTranslate) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_TRANSLATE); }
+  NJS_BIND_METHOD(scale        ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_SCALE         ); }
+  NJS_BIND_METHOD(postScale    ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_SCALE    ); }
+  NJS_BIND_METHOD(skew         ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_SKEW          ); }
+  NJS_BIND_METHOD(postSkew     ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_SKEW     ); }
+  NJS_BIND_METHOD(rotate       ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_ROTATE        ); }
+  NJS_BIND_METHOD(postRotate   ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_ROTATE   ); }
+  NJS_BIND_METHOD(transform    ) { return matrixOp(ctx, self, BL_MATRIX2D_OP_TRANSFORM     ); }
+  NJS_BIND_METHOD(postTransform) { return matrixOp(ctx, self, BL_MATRIX2D_OP_POST_TRANSFORM); }
 
-  static njs::Result matrixOp(njs::FunctionCallContext& ctx, JSContext2D* self, uint32_t op) noexcept {
-    BlendJSUtils::MatrixData data;
+  static njs::Result matrixOp(njs::FunctionCallContext& ctx, ContextWrap* self, uint32_t op) noexcept {
+    BLMatrix2D m;
 
-    NJS_CHECK(BlendJSUtils::unpackMatrixArg(ctx, op, data));
-    self->_obj._matrixOp(op, &data);
+    NJS_CHECK(B2DUtils::unpackMatrixArg(ctx, op, m));
+    self->_obj._applyMatrixOp(op, &m);
 
     return ctx.returnValue(ctx.This());
   }
@@ -1933,8 +1949,8 @@ NJS_BIND_CLASS(JSContext2D) {
       self->_obj.save();
     }
     else if (argc == 1) {
-      JSCookie* cookie = nullptr;
-      NJS_CHECK(ctx.unwrapArgument<JSCookie>(0, &cookie));
+      ContextCookieWrap* cookie = nullptr;
+      NJS_CHECK(ctx.unwrapArgument<ContextCookieWrap>(0, &cookie));
       self->_obj.save(cookie->_obj);
     }
     else {
@@ -1950,14 +1966,59 @@ NJS_BIND_CLASS(JSContext2D) {
       self->_obj.restore();
     }
     else if (argc == 1) {
-      JSCookie* cookie = nullptr;
-      NJS_CHECK(ctx.unwrapArgument<JSCookie>(0, &cookie));
+      ContextCookieWrap* cookie = nullptr;
+      NJS_CHECK(ctx.unwrapArgument<ContextCookieWrap>(0, &cookie));
       self->_obj.restore(cookie->_obj);
     }
     else {
       return ctx.invalidArgumentsLength(0, 1);
     }
 
+    return ctx.returnValue(ctx.This());
+  }
+
+  // --------------------------------------------------------------------------
+  // [Clip]
+  // --------------------------------------------------------------------------
+
+  NJS_BIND_METHOD(clipToRect) {
+    BLRect rect;
+
+    NJS_CHECK(ctx.verifyArgumentsLength(4));
+    NJS_CHECK(ctx.unpackArgument(0, rect.x));
+    NJS_CHECK(ctx.unpackArgument(1, rect.y));
+    NJS_CHECK(ctx.unpackArgument(2, rect.w));
+    NJS_CHECK(ctx.unpackArgument(3, rect.h));
+
+    self->_obj.clipToRect(rect);
+    return ctx.returnValue(ctx.This());
+  }
+
+  NJS_BIND_METHOD(restoreClipping) {
+    NJS_CHECK(ctx.verifyArgumentsLength(0));
+    self->_obj.restoreClipping();
+    return ctx.returnValue(ctx.This());
+  }
+
+  // --------------------------------------------------------------------------
+  // [Clear]
+  // --------------------------------------------------------------------------
+
+  NJS_BIND_METHOD(clearAll) {
+    self->_obj.clearAll();
+    return ctx.returnValue(ctx.This());
+  }
+
+  NJS_BIND_METHOD(clearRect) {
+    BLRect rect;
+
+    NJS_CHECK(ctx.verifyArgumentsLength(4));
+    NJS_CHECK(ctx.unpackArgument(0, rect.x));
+    NJS_CHECK(ctx.unpackArgument(1, rect.y));
+    NJS_CHECK(ctx.unpackArgument(2, rect.w));
+    NJS_CHECK(ctx.unpackArgument(3, rect.h));
+
+    self->_obj.clearRect(rect);
     return ctx.returnValue(ctx.This());
   }
 
@@ -1970,23 +2031,23 @@ NJS_BIND_CLASS(JSContext2D) {
     return ctx.returnValue(ctx.This());
   }
 
-  NJS_BIND_METHOD(fillBox     ) { return fillArg(ctx, self, b2d::kGeomArgBox     ); }
-  NJS_BIND_METHOD(fillRect    ) { return fillArg(ctx, self, b2d::kGeomArgRect    ); }
-  NJS_BIND_METHOD(fillCircle  ) { return fillArg(ctx, self, b2d::kGeomArgCircle  ); }
-  NJS_BIND_METHOD(fillEllipse ) { return fillArg(ctx, self, b2d::kGeomArgEllipse ); }
-  NJS_BIND_METHOD(fillRound   ) { return fillArg(ctx, self, b2d::kGeomArgRound   ); }
-  NJS_BIND_METHOD(fillChord   ) { return fillArg(ctx, self, b2d::kGeomArgChord   ); }
-  NJS_BIND_METHOD(fillPie     ) { return fillArg(ctx, self, b2d::kGeomArgPie     ); }
-  NJS_BIND_METHOD(fillTriangle) { return fillArg(ctx, self, b2d::kGeomArgTriangle); }
-  NJS_BIND_METHOD(fillPolygon ) { return fillArg(ctx, self, b2d::kGeomArgPolygon ); }
-  NJS_BIND_METHOD(fillPath    ) { return fillArg(ctx, self, b2d::kGeomArgPath2D  ); }
+  NJS_BIND_METHOD(fillBox      ) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_BOXD      ); }
+  NJS_BIND_METHOD(fillRect     ) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_RECTD     ); }
+  NJS_BIND_METHOD(fillCircle   ) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_CIRCLE    ); }
+  NJS_BIND_METHOD(fillEllipse  ) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_ELLIPSE   ); }
+  NJS_BIND_METHOD(fillRoundRect) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_ROUND_RECT); }
+  NJS_BIND_METHOD(fillChord    ) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_CHORD     ); }
+  NJS_BIND_METHOD(fillPie      ) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_PIE       ); }
+  NJS_BIND_METHOD(fillTriangle ) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_TRIANGLE  ); }
+  NJS_BIND_METHOD(fillPolygon  ) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_POLYGOND  ); }
+  NJS_BIND_METHOD(fillPath     ) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_PATH      ); }
 
-  static njs::Result fillArg(njs::FunctionCallContext& ctx, JSContext2D* self, uint32_t id) noexcept {
-    BlendJSUtils::GeomData data;
-    b2d::MemBufferTmp<1024> mem;
+  static njs::Result fillGeometry(njs::FunctionCallContext& ctx, ContextWrap* self, uint32_t geometryType) noexcept {
+    B2DUtils::GeometryData geometryData;
+    MemBufferTmp<1024> mem;
 
-    NJS_CHECK(BlendJSUtils::unpackGeomArg(ctx, id, data, mem));
-    self->_obj._fillArg(id, &data);
+    NJS_CHECK(B2DUtils::unpackGeometryArg(ctx, geometryType, geometryData, mem));
+    self->_obj.fillGeometry(geometryType, &geometryData);
 
     return ctx.returnValue(ctx.This());
   }
@@ -1995,7 +2056,7 @@ NJS_BIND_CLASS(JSContext2D) {
     NJS_CHECK(ctx.verifyArgumentsLength(4));
 
     double x, y;
-    JSFont* font;
+    FontWrap* font;
     NJS_CHECK(ctx.unpackArgument(0, x));
     NJS_CHECK(ctx.unpackArgument(1, y));
     NJS_CHECK(ctx.unwrapArgument(2, &font));
@@ -2004,10 +2065,15 @@ NJS_BIND_CLASS(JSContext2D) {
     if (!text.isString())
       return ctx.invalidArgument(3);
 
-    uint16_t content[1024];
-    int size = text.readUtf16(content, 1024);
+    MemBufferTmp<2048> buf;
+    size_t len = ctx.stringLength(text);
 
-    self->_obj.fillUtf16Text(b2d::Point(x, y), font->_obj, content, size_t(size));
+    uint16_t* content = static_cast<uint16_t*>(buf.alloc(len * sizeof(uint16_t)));
+    if (!content)
+      return ctx.returnValue(ctx.This());
+
+    int size = ctx.readUtf16(text, content, len);
+    self->_obj.fillUtf16Text(BLPoint(x, y), font->_obj, content, size_t(size));
     return ctx.returnValue(ctx.This());
   }
 
@@ -2015,7 +2081,7 @@ NJS_BIND_CLASS(JSContext2D) {
     NJS_CHECK(ctx.verifyArgumentsLength(5));
 
     double x, y;
-    JSFont* font;
+    FontWrap* font;
     NJS_CHECK(ctx.unpackArgument(0, x));
     NJS_CHECK(ctx.unpackArgument(1, y));
     NJS_CHECK(ctx.unwrapArgument(2, &font));
@@ -2027,19 +2093,19 @@ NJS_BIND_CLASS(JSContext2D) {
       return ctx.invalidArgument(1);
 
     bool posIsRawArray = false;
-    size_t count = srcGlyphs.arrayLength();
-    size_t posCount = srcPositions.arrayLength();
+    size_t count = ctx.arrayLength(srcGlyphs);
+    size_t posCount = ctx.arrayLength(srcPositions);
 
     posIsRawArray = (count * 2 == posCount);
     if (count != posCount && !posIsRawArray)
       return ctx.invalidArgument();
 
     if (count) {
-      b2d::MemBufferTmp<1024> buf;
-      void* p = buf.alloc(count * (sizeof(b2d::Point) + sizeof(b2d::GlyphId)));
+      MemBufferTmp<1024> buf;
+      void* p = buf.alloc(count * (sizeof(BLPoint) + sizeof(BLGlyphId)));
       if (p) {
-        b2d::Point* tmpOffsets = static_cast<b2d::Point*>(p);
-        b2d::GlyphId* tmpGlyphs = static_cast<b2d::GlyphId*>(b2d::Support::advancePtr(p, count * sizeof(b2d::Point)));
+        BLPoint* tmpOffsets = static_cast<BLPoint*>(p);
+        BLGlyphId* tmpGlyphs = reinterpret_cast<BLGlyphId*>(tmpOffsets + count);
 
         if (posIsRawArray) {
           for (size_t i = 0, posIndex = 0; i < count; i++, posIndex += 2) {
@@ -2050,12 +2116,12 @@ NJS_BIND_CLASS(JSContext2D) {
             if (!gVal.isUint32() || !xVal.isNumber() || !yVal.isNumber())
               return ctx.invalidArgument();
 
-            uint32_t glyphId = gVal.uint32Value();
+            uint32_t glyphId = ctx.uint32Value(gVal);
             if (glyphId > 65535)
               return ctx.invalidArgument();
 
-            tmpGlyphs[i] = b2d::GlyphId(glyphId);
-            tmpOffsets[i].reset(xVal.doubleValue(), yVal.doubleValue());
+            tmpGlyphs[i] = BLGlyphId(glyphId);
+            tmpOffsets[i].reset(ctx.doubleValue(xVal), ctx.doubleValue(yVal));
           }
         }
         else {
@@ -2069,25 +2135,27 @@ NJS_BIND_CLASS(JSContext2D) {
             if (!gVal.isUint32() || !pVal.isObject())
               return ctx.invalidArgument();
 
-            uint32_t glyphId = gVal.uint32Value();
+            uint32_t glyphId = ctx.uint32Value(gVal);
             njs::Value xVal = ctx.propertyOf(pVal, xStr);
             njs::Value yVal = ctx.propertyOf(pVal, yStr);
 
             if (glyphId > 65535 || !xVal.isNumber() || !yVal.isNumber())
               return ctx.invalidArgument();
 
-            tmpGlyphs[i] = b2d::GlyphId(glyphId);
-            tmpOffsets[i].reset(xVal.doubleValue(), yVal.doubleValue());
+            tmpGlyphs[i] = BLGlyphId(glyphId);
+            tmpOffsets[i].reset(ctx.doubleValue(xVal), ctx.doubleValue(yVal));
           }
         }
 
-        b2d::GlyphRun glyphRun;
-        glyphRun.setFlags(b2d::GlyphRun::kFlagOffsetsAreAbsolute |
-                          b2d::GlyphRun::kFlagUserSpaceOffsets);
-        glyphRun.setSize(count);
-        glyphRun.setGlyphIds(tmpGlyphs);
-        glyphRun.setGlyphOffsets(tmpOffsets);
-        self->_obj.fillGlyphRun(b2d::Point(x, y), font->_obj, glyphRun);
+        BLGlyphRun gr {};
+        gr.glyphIdData = tmpGlyphs;
+        gr.placementData = tmpOffsets;
+        gr.size = count;
+        gr.glyphIdSize = 2;
+        gr.glyphIdAdvance = int8_t(sizeof(BLGlyphId));
+        gr.placementAdvance = int8_t(sizeof(BLPoint));
+        gr.placementType = BL_GLYPH_PLACEMENT_TYPE_USER_UNITS;
+        self->_obj.fillGlyphRun(BLPoint(x, y), font->_obj, gr);
       }
     }
 
@@ -2098,26 +2166,52 @@ NJS_BIND_CLASS(JSContext2D) {
   // [Stroke]
   // --------------------------------------------------------------------------
 
-  NJS_BIND_METHOD(strokeLine    ) { return strokeArg(ctx, self, b2d::kGeomArgLine    ); }
-  NJS_BIND_METHOD(strokeBox     ) { return strokeArg(ctx, self, b2d::kGeomArgBox     ); }
-  NJS_BIND_METHOD(strokeRect    ) { return strokeArg(ctx, self, b2d::kGeomArgRect    ); }
-  NJS_BIND_METHOD(strokeCircle  ) { return strokeArg(ctx, self, b2d::kGeomArgCircle  ); }
-  NJS_BIND_METHOD(strokeEllipse ) { return strokeArg(ctx, self, b2d::kGeomArgEllipse ); }
-  NJS_BIND_METHOD(strokeRound   ) { return strokeArg(ctx, self, b2d::kGeomArgRound   ); }
-  NJS_BIND_METHOD(strokeChord   ) { return strokeArg(ctx, self, b2d::kGeomArgChord   ); }
-  NJS_BIND_METHOD(strokePie     ) { return strokeArg(ctx, self, b2d::kGeomArgPie     ); }
-  NJS_BIND_METHOD(strokeTriangle) { return strokeArg(ctx, self, b2d::kGeomArgTriangle); }
-  NJS_BIND_METHOD(strokePolygon ) { return strokeArg(ctx, self, b2d::kGeomArgPolygon ); }
-  NJS_BIND_METHOD(strokePolyline) { return strokeArg(ctx, self, b2d::kGeomArgPolyline); }
-  NJS_BIND_METHOD(strokePath    ) { return strokeArg(ctx, self, b2d::kGeomArgPath2D  ); }
+  NJS_BIND_METHOD(strokeLine     ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_LINE      ); }
+  NJS_BIND_METHOD(strokeBox      ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_BOXD      ); }
+  NJS_BIND_METHOD(strokeRect     ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_RECTD     ); }
+  NJS_BIND_METHOD(strokeCircle   ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_CIRCLE    ); }
+  NJS_BIND_METHOD(strokeEllipse  ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_ELLIPSE   ); }
+  NJS_BIND_METHOD(strokeRoundRect) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_ROUND_RECT); }
+  NJS_BIND_METHOD(strokeChord    ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_CHORD     ); }
+  NJS_BIND_METHOD(strokePie      ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_PIE       ); }
+  NJS_BIND_METHOD(strokeTriangle ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_TRIANGLE  ); }
+  NJS_BIND_METHOD(strokePolygon  ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_POLYGOND  ); }
+  NJS_BIND_METHOD(strokePolyline ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_POLYLINED ); }
+  NJS_BIND_METHOD(strokePath     ) { return strokeGeometry(ctx, self, BL_GEOMETRY_TYPE_PATH      ); }
 
-  static njs::Result strokeArg(njs::FunctionCallContext& ctx, JSContext2D* self, uint32_t id) noexcept {
-    BlendJSUtils::GeomData data;
-    b2d::MemBufferTmp<1024> mem;
 
-    NJS_CHECK(BlendJSUtils::unpackGeomArg(ctx, id, data, mem));
-    self->_obj._strokeArg(id, &data);
+  static njs::Result strokeGeometry(njs::FunctionCallContext& ctx, ContextWrap* self, uint32_t geometryType) noexcept {
+    B2DUtils::GeometryData geometryData;
+    MemBufferTmp<1024> mem;
 
+    NJS_CHECK(B2DUtils::unpackGeometryArg(ctx, geometryType, geometryData, mem));
+    self->_obj.strokeGeometry(geometryType, &geometryData);
+
+    return ctx.returnValue(ctx.This());
+  }
+
+  NJS_BIND_METHOD(strokeText) {
+    NJS_CHECK(ctx.verifyArgumentsLength(4));
+
+    double x, y;
+    FontWrap* font;
+    NJS_CHECK(ctx.unpackArgument(0, x));
+    NJS_CHECK(ctx.unpackArgument(1, y));
+    NJS_CHECK(ctx.unwrapArgument(2, &font));
+
+    njs::Value text = ctx.argumentAt(3);
+    if (!text.isString())
+      return ctx.invalidArgument(3);
+
+    MemBufferTmp<2048> buf;
+    size_t len = ctx.stringLength(text);
+
+    uint16_t* content = static_cast<uint16_t*>(buf.alloc(len * sizeof(uint16_t)));
+    if (!content)
+      return ctx.returnValue(ctx.This());
+
+    int size = ctx.readUtf16(text, content, len);
+    self->_obj.strokeUtf16Text(BLPoint(x, y), font->_obj, content, size_t(size));
     return ctx.returnValue(ctx.This());
   }
 
@@ -2127,20 +2221,20 @@ NJS_BIND_CLASS(JSContext2D) {
 
   NJS_BIND_METHOD(blitImage) {
     unsigned int argc = ctx.argumentsLength();
-    JSImage* image = nullptr;
+    ImageWrap* image = nullptr;
 
     if (argc == 1) {
-      NJS_CHECK(ctx.unwrapArgument<JSImage>(0, &image));
-      self->_obj.blitImage(b2d::IntPoint(0, 0), image->_obj);
+      NJS_CHECK(ctx.unwrapArgument<ImageWrap>(0, &image));
+      self->_obj.blitImage(BLPointI(0, 0), image->_obj);
     }
     else if (argc == 3) {
       double x, y;
 
       NJS_CHECK(ctx.unpackArgument(0, x));
       NJS_CHECK(ctx.unpackArgument(1, y));
-      NJS_CHECK(ctx.unwrapArgument<JSImage>(2, &image));
+      NJS_CHECK(ctx.unwrapArgument<ImageWrap>(2, &image));
 
-      self->_obj.blitImage(b2d::Point(x, y), image->_obj);
+      self->_obj.blitImage(BLPoint(x, y), image->_obj);
     }
     else if (argc == 5) {
       double x, y, w, h;
@@ -2149,9 +2243,9 @@ NJS_BIND_CLASS(JSContext2D) {
       NJS_CHECK(ctx.unpackArgument(1, y));
       NJS_CHECK(ctx.unpackArgument(2, w));
       NJS_CHECK(ctx.unpackArgument(3, h));
-      NJS_CHECK(ctx.unwrapArgument<JSImage>(4, &image));
+      NJS_CHECK(ctx.unwrapArgument<ImageWrap>(4, &image));
 
-      self->_obj.blitImage(b2d::Rect(x, y, w, h), image->_obj);
+      self->_obj.blitImage(BLRect(x, y, w, h), image->_obj);
     }
     else if (argc == 7) {
       double dx, dy;
@@ -2159,13 +2253,13 @@ NJS_BIND_CLASS(JSContext2D) {
 
       NJS_CHECK(ctx.unpackArgument(0, dx));
       NJS_CHECK(ctx.unpackArgument(1, dy));
-      NJS_CHECK(ctx.unwrapArgument<JSImage>(2, &image));
+      NJS_CHECK(ctx.unwrapArgument<ImageWrap>(2, &image));
       NJS_CHECK(ctx.unpackArgument(3, sx));
       NJS_CHECK(ctx.unpackArgument(4, sy));
       NJS_CHECK(ctx.unpackArgument(5, sw));
       NJS_CHECK(ctx.unpackArgument(6, sh));
 
-      self->_obj.blitImage(b2d::Point(dx, dy), image->_obj, b2d::IntRect(sx, sy, sw, sh));
+      self->_obj.blitImage(BLPoint(dx, dy), image->_obj, BLRectI(sx, sy, sw, sh));
     }
     else if (argc == 9) {
       double dx, dy, dw, dh;
@@ -2175,13 +2269,13 @@ NJS_BIND_CLASS(JSContext2D) {
       NJS_CHECK(ctx.unpackArgument(1, dy));
       NJS_CHECK(ctx.unpackArgument(2, dw));
       NJS_CHECK(ctx.unpackArgument(3, dh));
-      NJS_CHECK(ctx.unwrapArgument<JSImage>(4, &image));
+      NJS_CHECK(ctx.unwrapArgument<ImageWrap>(4, &image));
       NJS_CHECK(ctx.unpackArgument(5, sx));
       NJS_CHECK(ctx.unpackArgument(6, sy));
       NJS_CHECK(ctx.unpackArgument(7, sw));
       NJS_CHECK(ctx.unpackArgument(8, sh));
 
-      self->_obj.blitImage(b2d::Rect(dx, dy, dw, dh), image->_obj, b2d::IntRect(sx, sy, sw, sh));
+      self->_obj.blitImage(BLRect(dx, dy, dw, dh), image->_obj, BLRectI(sx, sy, sw, sh));
     }
     else {
       return ctx.invalidArgumentsLength();
@@ -2199,32 +2293,34 @@ struct DecodeAsyncTask : public njs::Task {
   DecodeAsyncTask(njs::Context& ctx, njs::Value data) noexcept
     : njs::Task(ctx, data),
       _inputData(),
-      _error(b2d::kErrorOk) {}
+      _error(BL_SUCCESS) {}
 
   virtual void onWork() noexcept {
-    b2d::ImageCodec codec = b2d::ImageCodec::codecByData(
-      b2d::ImageCodec::builtinCodecs(),
-      _inputData.data(),
-      _inputData.size());
+    BLImageCodec codec;
+    _error = codec.findByData(BLImageCodec::builtInCodecs(), _inputData.data(), _inputData.size());
+    if (_error != BL_SUCCESS)
+      return;
 
-    b2d::ImageDecoder dec = codec.createDecoder();
-    _error = dec.decode(_outputImage,
-      _inputData.data(),
-      _inputData.size());
+    BLImageDecoder decoder;
+    _error = codec.createDecoder(&decoder);
+    if (_error != BL_SUCCESS)
+      return;
+
+    _error = decoder.readFrame(_outputImage, _inputData.data(), _inputData.size());
   }
 
   virtual void onDone(njs::Context& ctx, njs::Value data) noexcept {
     njs::Value exports = ctx.propertyAt(data, kIndexExports);
     njs::Value cb      = ctx.propertyAt(data, kIndexCallback);
 
-    if (_error != b2d::kErrorOk) {
+    if (_error != BL_SUCCESS) {
       ctx.call(cb, ctx.null(), ctx.newValue(_error), ctx.null());
     }
     else {
       njs::Value ImageClass = ctx.propertyOf(exports, njs::Utf8Ref("Image"));
       njs::Value obj = ctx.newInstance(ImageClass);
 
-      JSImage* img = ctx.unwrapUnsafe<JSImage>(obj);
+      ImageWrap* img = ctx.unwrapUnsafe<ImageWrap>(obj);
       img->_obj.assign(_outputImage);
 
       ctx.call(cb, ctx.null(), ctx.null(), obj);
@@ -2232,8 +2328,8 @@ struct DecodeAsyncTask : public njs::Task {
   }
 
   njs::StrRef<const uint8_t> _inputData;
-  b2d::Image _outputImage;
-  b2d::Error _error;
+  BLImage _outputImage;
+  BLResult _error;
 };
 
 #if 1
@@ -2290,41 +2386,46 @@ struct ImageIO {
     size_t size = njs::Node::bufferSize(buffer);
     const uint8_t* data = static_cast<const uint8_t*>(njs::Node::bufferData(buffer));
 
-    b2d::ImageCodec codec = b2d::ImageCodec::codecByData(b2d::ImageCodec::builtinCodecs(), data, size);
-    b2d::ImageDecoder dec = codec.createDecoder();
+    BLImageCodec codec;
+    BLResult result = codec.findByData(BLImageCodec::builtInCodecs(), data, size);
+    if (result != BL_SUCCESS)
+      return ctx.returnValue(result);
 
-    b2d::Image img;
-    b2d::Error err = dec.decode(img, data, size);
+    BLImageDecoder decoder;
+    result = codec.createDecoder(&decoder);
+    if (result != BL_SUCCESS)
+      return ctx.returnValue(result);
 
-    if (err != b2d::kErrorOk) {
-      return ctx.returnValue(err);
-    }
-    else {
-      njs::Value ImageClass = ctx.propertyOf(njs::Value(ctx.v8CallbackInfo().Data()), njs::Utf8Ref("Image"));
-      njs::Value obj = ctx.newInstance(ImageClass);
+    BLImage img;
+    result = decoder.readFrame(img, data, size);
+    if (result != BL_SUCCESS)
+      return ctx.returnValue(result);
 
-      JSImage* wrap = ctx.unwrapUnsafe<JSImage>(obj);
-      wrap->_obj.assign(img);
-      return ctx.returnValue(obj);
-    }
+    njs::Value ImageClass = ctx.propertyOf(njs::Value(ctx.v8CallbackInfo().Data()), njs::Utf8Ref("Image"));
+    njs::Value obj = ctx.newInstance(ImageClass);
+
+    ImageWrap* wrap = ctx.unwrapUnsafe<ImageWrap>(obj);
+    wrap->_obj.assign(img);
+    return ctx.returnValue(obj);
   }
 
   NJS_BIND_STATIC(scaleSync) {
     NJS_CHECK(ctx.verifyArgumentsLength(4, 5));
 
-    JSImage* image;
+    ImageWrap* image;
     int w, h;
 
     uint32_t filter;
-    b2d::ImageScaler::Params params;
+    BLImageScaleOptions options;
+    options.resetToDefaults();
 
-    NJS_CHECK(ctx.unwrapArgument<JSImage>(0, &image));
-    NJS_CHECK(ctx.unpackArgument(1, w, njs::Range<int>(1, b2d::Image::kMaxSize)));
-    NJS_CHECK(ctx.unpackArgument(2, h, njs::Range<int>(1, b2d::Image::kMaxSize)));
-    NJS_CHECK(ctx.unpackArgument(3, filter, Enum_ImageScaler_Filter));
+    NJS_CHECK(ctx.unwrapArgument<ImageWrap>(0, &image));
+    NJS_CHECK(ctx.unpackArgument(1, w, njs::Range<int>(1, BL_RUNTIME_MAX_IMAGE_SIZE)));
+    NJS_CHECK(ctx.unpackArgument(2, h, njs::Range<int>(1, BL_RUNTIME_MAX_IMAGE_SIZE)));
+    NJS_CHECK(ctx.unpackArgument(3, filter, Enum_ImageScaleFilter));
 
-    if (filter == b2d::ImageScaler::kFilterNone ||
-        filter == b2d::ImageScaler::kFilterCustom)
+    if (filter == BL_IMAGE_SCALE_FILTER_NONE ||
+        filter == BL_IMAGE_SCALE_FILTER_USER)
       return ctx.invalidArgument(3);
 
     if (ctx.argumentsLength() >= 5) {
@@ -2333,79 +2434,83 @@ struct ImageIO {
         return ctx.invalidArgument(4);
 
       switch (filter) {
-        case b2d::ImageScaler::kFilterSinc    :
-        case b2d::ImageScaler::kFilterLanczos :
-        case b2d::ImageScaler::kFilterBlackman: {
+        case BL_IMAGE_SCALE_FILTER_SINC    :
+        case BL_IMAGE_SCALE_FILTER_LANCZOS :
+        case BL_IMAGE_SCALE_FILTER_BLACKMAN: {
           njs::Value radius = ctx.propertyOf(obj, njs::Utf8Ref("radius"));
           if (radius.isNumber())
-            params.setRadius(radius.doubleValue());
+            options.radius = ctx.doubleValue(radius);
           break;
         }
 
-        case b2d::ImageScaler::kFilterMitchell: {
+        case BL_IMAGE_SCALE_FILTER_MITCHELL: {
           njs::Value b = ctx.propertyOf(obj, njs::Utf8Ref("b"));
           njs::Value c = ctx.propertyOf(obj, njs::Utf8Ref("c"));
 
           if (b.isNumber())
-            params.setMitchellB(b.doubleValue());
+            options.mitchell.b = ctx.doubleValue(b);
 
           if (c.isNumber())
-            params.setMitchellC(c.doubleValue());
+            options.mitchell.c = ctx.doubleValue(c);
           break;
         }
       }
     }
 
-    b2d::Image dst;
-    b2d::Error err = b2d::Image::scale(dst, image->_obj, b2d::IntSize(w, h), params);
+    BLImage dst;
+    BLResult err = BLImage::scale(dst, image->_obj, BLSizeI(w, h), filter, &options);
 
-    if (err != b2d::kErrorOk) {
+    if (err != BL_SUCCESS) {
       return ctx.returnValue(err);
     }
     else {
       njs::Value ImageClass = ctx.propertyOf(njs::Value(ctx.v8CallbackInfo().Data()), njs::Utf8Ref("Image"));
       njs::Value obj = ctx.newInstance(ImageClass);
 
-      JSImage* wrap = ctx.unwrapUnsafe<JSImage>(obj);
+      ImageWrap* wrap = ctx.unwrapUnsafe<ImageWrap>(obj);
       wrap->_obj.assign(dst);
       return ctx.returnValue(obj);
     }
   }
 
   NJS_BIND_STATIC(toRaw) {
-    JSImage* image;
+    ImageWrap* image;
 
     NJS_CHECK(ctx.verifyArgumentsLength(1));
     NJS_CHECK(ctx.unwrapArgument(0, &image));
 
-    b2d::PixelConverter cvt;
-    static const uint32_t convertMasks[4] = { 0xFF000000u, 0x000000FFu, 0x0000FF00u, 0x00FF0000u };
+    BLPixelConverter pc;
+    BLFormatInfo srcFmt {};
 
-    b2d::Error err = cvt.initExport(image->_obj.pixelFormat(), 32, &convertMasks);
+    srcFmt.flags |= BL_FORMAT_FLAG_RGBA | BL_FORMAT_FLAG_PREMULTIPLIED;
+    srcFmt.depth = 32;
+    srcFmt.setSizes(8, 8, 8, 8);
+    srcFmt.setShifts(0, 8, 16, 24);
+
+    BLResult err = pc.create(blFormatInfo[image->_obj.format()], srcFmt);
     if (err)
       return ctx.returnValue(ctx.undefined());
 
-    b2d::ImageBuffer imageData;
-    err = image->_obj.lock(imageData);
+    BLImageData imageData;
+    err = image->_obj.getData(&imageData);
     if (err)
       return ctx.returnValue(ctx.undefined());
 
-    unsigned int w = imageData.width();
-    unsigned int h = imageData.height();
+    unsigned int w = imageData.size.w;
+    unsigned int h = imageData.size.h;
     unsigned int bpl = w * 4;
     size_t size = 8 + h * bpl;
 
     njs::Value buf = njs::Node::newBuffer(ctx, size);
     uint8_t* bufData = static_cast<uint8_t*>(njs::Node::bufferData(buf));
 
-    uint8_t* pixels = imageData.pixelData();
-    intptr_t stride = imageData.stride();
+    uint8_t* pixels = static_cast<uint8_t*>(imageData.pixelData);
+    intptr_t stride = imageData.stride;
 
     dd(bufData + 0, w);
     dd(bufData + 4, h);
-    cvt.convertRect(bufData + 8, bpl, pixels, stride, w, h);
+    pc.convertRect(bufData + 8, bpl, pixels, stride, w, h);
 
-    image->_obj.unlock(imageData);
     return ctx.returnValue(buf);
   }
 };
@@ -2414,17 +2519,19 @@ struct ImageIO {
 B2DJS_API NJS_MODULE(b2d) {
   typedef v8::Local<v8::FunctionTemplate> FunctionSpec;
 
-  FunctionSpec CookieSpec          = NJS_INIT_CLASS(JSCookie         , exports);
-  FunctionSpec ImageSpec           = NJS_INIT_CLASS(JSImage          , exports);
-  FunctionSpec Path2DSpec          = NJS_INIT_CLASS(JSPath2D         , exports);
-  FunctionSpec PatternSpec         = NJS_INIT_CLASS(JSPattern        , exports);
-  FunctionSpec GradientSpec        = NJS_INIT_CLASS(JSGradient       , exports);
-  FunctionSpec LinearGradientSpec  = NJS_INIT_CLASS(JSLinearGradient , exports, GradientSpec);
-  FunctionSpec RadialGradientSpec  = NJS_INIT_CLASS(JSRadialGradient , exports, GradientSpec);
-  FunctionSpec ConicalGradientSpec = NJS_INIT_CLASS(JSConicalGradient, exports, GradientSpec);
-  FunctionSpec FontFaceSpec        = NJS_INIT_CLASS(JSFontFace       , exports);
-  FunctionSpec FontSpec            = NJS_INIT_CLASS(JSFont           , exports);
-  FunctionSpec Context2DSpec       = NJS_INIT_CLASS(JSContext2D      , exports);
+  FunctionSpec ImageSpec         = NJS_INIT_CLASS(ImageWrap        , exports);
+  FunctionSpec PathSpec          = NJS_INIT_CLASS(PathWrap         , exports);
+  FunctionSpec GradientSpec      = NJS_INIT_CLASS(GradientWrap     , exports);
+  FunctionSpec PatternSpec       = NJS_INIT_CLASS(PatternWrap      , exports);
+  FunctionSpec FontFaceSpec      = NJS_INIT_CLASS(FontFaceWrap     , exports);
+  FunctionSpec FontSpec          = NJS_INIT_CLASS(FontWrap         , exports);
+  FunctionSpec ContextSpec       = NJS_INIT_CLASS(ContextWrap      , exports);
+  FunctionSpec ContextCookieSpec = NJS_INIT_CLASS(ContextCookieWrap, exports);
+
+  njs::Value RuntimeObject = ctx.newObject();
+  ctx.setProperty(exports, ctx.newInternalizedString(njs::Latin1Ref("Runtime")), RuntimeObject);
+
+  RuntimeObject.v8HandleAs<v8::Object>()->Set(ctx.newInternalizedString(njs::Latin1Ref("memoryInfo")).v8Handle(), v8::FunctionTemplate::New(ctx.v8Isolate(), RuntimeWrap::StaticEntry_memoryInfo, exports.v8Handle())->GetFunction());
 
   exports.v8HandleAs<v8::Object>()->Set(ctx.newInternalizedString(njs::Latin1Ref("decode"    )).v8Handle(), v8::FunctionTemplate::New(ctx.v8Isolate(), ImageIO::StaticEntry_decode    , exports.v8Handle())->GetFunction());
   exports.v8HandleAs<v8::Object>()->Set(ctx.newInternalizedString(njs::Latin1Ref("decodeSync")).v8Handle(), v8::FunctionTemplate::New(ctx.v8Isolate(), ImageIO::StaticEntry_decodeSync, exports.v8Handle())->GetFunction());
