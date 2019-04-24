@@ -1,4 +1,4 @@
-// [B2D-JS]
+// [Blend2D-JS]
 // Blend2D javascript bindings.
 //
 // [License]

@@ -1,4 +1,4 @@
-// [B2D-JS]
+// [Blend2D-JS]
 // Blend2D javascript bindings.
 //
 // [License]
@@ -448,8 +448,8 @@ njs::Result B2DUtils::unpackGeometryArg(njs::FunctionCallContext& ctx, uint32_t&
 
     case BL_GEOMETRY_TYPE_CIRCLE: {
       NJS_CHECK(ctx.verifyArgumentsLength(3));
-      NJS_CHECK(ctx.unpackArgument(0, data.circle.center.x));
-      NJS_CHECK(ctx.unpackArgument(1, data.circle.center.y));
+      NJS_CHECK(ctx.unpackArgument(0, data.circle.cx));
+      NJS_CHECK(ctx.unpackArgument(1, data.circle.cy));
       NJS_CHECK(ctx.unpackArgument(2, data.circle.r));
 
       return njs::Globals::kResultOk;
@@ -457,10 +457,10 @@ njs::Result B2DUtils::unpackGeometryArg(njs::FunctionCallContext& ctx, uint32_t&
 
     case BL_GEOMETRY_TYPE_ELLIPSE: {
       NJS_CHECK(ctx.verifyArgumentsLength(4));
-      NJS_CHECK(ctx.unpackArgument(0, data.ellipse.center.x));
-      NJS_CHECK(ctx.unpackArgument(1, data.ellipse.center.y));
-      NJS_CHECK(ctx.unpackArgument(2, data.ellipse.radius.x));
-      NJS_CHECK(ctx.unpackArgument(3, data.ellipse.radius.y));
+      NJS_CHECK(ctx.unpackArgument(0, data.ellipse.cx));
+      NJS_CHECK(ctx.unpackArgument(1, data.ellipse.cy));
+      NJS_CHECK(ctx.unpackArgument(2, data.ellipse.rx));
+      NJS_CHECK(ctx.unpackArgument(3, data.ellipse.ry));
 
       return njs::Globals::kResultOk;
     }
@@ -1740,13 +1740,13 @@ NJS_BIND_CLASS(ContextWrap) {
   // [Fill & Stroke Style]
   // --------------------------------------------------------------------------
 
-  NJS_BIND_GET(fillStyle) { return getOpStyle(ctx, self, BL_CONTEXT_OP_TYPE_FILL); }
-  NJS_BIND_SET(fillStyle) { return setOpStyle(ctx, self, BL_CONTEXT_OP_TYPE_FILL); }
+  NJS_BIND_GET(fillStyle) { return getStyle(ctx, self, BL_CONTEXT_OP_TYPE_FILL); }
+  NJS_BIND_SET(fillStyle) { return setStyle(ctx, self, BL_CONTEXT_OP_TYPE_FILL); }
 
-  NJS_BIND_GET(strokeStyle) { return getOpStyle(ctx, self, BL_CONTEXT_OP_TYPE_STROKE); }
-  NJS_BIND_SET(strokeStyle) { return setOpStyle(ctx, self, BL_CONTEXT_OP_TYPE_STROKE); }
+  NJS_BIND_GET(strokeStyle) { return getStyle(ctx, self, BL_CONTEXT_OP_TYPE_STROKE); }
+  NJS_BIND_SET(strokeStyle) { return setStyle(ctx, self, BL_CONTEXT_OP_TYPE_STROKE); }
 
-  static njs::Result getOpStyle(njs::GetPropertyContext& ctx, ContextWrap* self, uint32_t slot) noexcept {
+  static njs::Result getStyle(njs::GetPropertyContext& ctx, ContextWrap* self, uint32_t slot) noexcept {
     // TODO:
     /*
     BLRgba32 rgba;
@@ -1757,26 +1757,26 @@ NJS_BIND_CLASS(ContextWrap) {
     return ctx.returnValue(njs::Undefined);
   }
 
-  static njs::Result setOpStyle(njs::SetPropertyContext& ctx, ContextWrap* self, uint32_t opType) noexcept {
+  static njs::Result setStyle(njs::SetPropertyContext& ctx, ContextWrap* self, uint32_t opType) noexcept {
     njs::Value value = ctx.propertyValue();
 
     if (value.isNumber()) {
       double d = ctx.doubleValue(value);
       uint32_t rgba = static_cast<uint32_t>(d);
-      self->_obj.setOpStyle(opType, BLRgba32(rgba));
+      self->_obj.setStyle(opType, BLRgba32(rgba));
     }
     else if (value.isString()) {
       uint32_t rgba;
       NJS_CHECK(ctx.unpack(value, rgba, ColorConcept()));
-      self->_obj.setOpStyle(opType, BLRgba32(rgba));
+      self->_obj.setStyle(opType, BLRgba32(rgba));
     }
     else if (ctx.isWrapped<GradientWrap>(value)) {
       GradientWrap* gradient = ctx.unwrapUnsafe<GradientWrap>(value);
-      self->_obj.setOpStyle(opType, gradient->_obj);
+      self->_obj.setStyle(opType, gradient->_obj);
     }
     else if (ctx.isWrapped<PatternWrap>(value)) {
       PatternWrap* pattern = ctx.unwrapUnsafe<PatternWrap>(value);
-      self->_obj.setOpStyle(opType, pattern->_obj);
+      self->_obj.setStyle(opType, pattern->_obj);
     }
     else {
       return njs::Globals::kResultInvalidValue;
