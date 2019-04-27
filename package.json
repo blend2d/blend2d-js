@@ -1,24 +1,21 @@
 {
   "name": "b2djs",
   "version": "0.0.1",
-
   "description": "Blend2D bindings for node.js",
   "keywords": [],
-
   "homepage": "https://github.com/blend2d/b2djs",
   "bugs": {
     "url": "https://github.com/blend2d/b2djs/issues"
   },
-
   "license": "Zlib",
   "main": "./index.js",
-  "dependencies": {},
-
+  "dependencies": {
+    "njs-api": "*"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/blend2d/b2djs.git"
   },
-
   "scripts": {
     "install": "node-gyp rebuild"
   }

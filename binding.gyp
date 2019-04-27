@@ -14,11 +14,12 @@
   "targets": [{
     "target_name": "b2djs",
     "sources": [
-      "b2djs.cpp",
-      "b2djs.h"
+      "blend2d-js.cpp",
+      "blend2d-js.h"
     ],
 
     "include_dirs": [
+      "<!@(node -p \"require('njs-api').include\")",
       "../blend2d/src"
     ],
 

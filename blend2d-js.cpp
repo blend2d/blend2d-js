@@ -8,12 +8,14 @@
 # define BUILDING_NODE_EXTENSION
 #endif
 
+#include "./blend2d-js.h"
+
+#include <stdlib.h>
 #include <algorithm>
-#include "./b2djs.h"
 
 #define ARRAY_SIZE(X) uint32_t(sizeof(X) / sizeof(X[0]))
 
-namespace b2djs {
+namespace bljs {
 
 // ============================================================================
 // [Globals]
@@ -230,7 +232,7 @@ public:
 };
 
 // ============================================================================
-// [b2djs::ColorConcept]
+// [bljs::ColorConcept]
 // ============================================================================
 
 struct ColorConcept {
@@ -343,10 +345,10 @@ public:
 };
 
 // ============================================================================
-// [b2djs::B2DUtils]
+// [bljs::BLUtils]
 // ============================================================================
 
-struct B2DUtils {
+struct BLUtils {
   union GeometryData {
     BL_INLINE GeometryData() noexcept {}
     BL_INLINE ~GeometryData() noexcept {}
@@ -366,7 +368,7 @@ struct B2DUtils {
   static njs::Result unpackGeometryArg(njs::FunctionCallContext& ctx, uint32_t& type, GeometryData& data, MemBuffer& mem) noexcept;
 };
 
-njs::Result B2DUtils::unpackMatrixArg(
+njs::Result BLUtils::unpackMatrixArg(
   njs::FunctionCallContext& ctx, uint32_t& op, BLMatrix2D& m) noexcept {
 
   unsigned int argc = ctx.argumentsLength();
@@ -422,7 +424,7 @@ L_UnpackXY:
   }
 }
 
-njs::Result B2DUtils::unpackGeometryArg(njs::FunctionCallContext& ctx, uint32_t& type, GeometryData& data, MemBuffer& mem) noexcept {
+njs::Result BLUtils::unpackGeometryArg(njs::FunctionCallContext& ctx, uint32_t& type, GeometryData& data, MemBuffer& mem) noexcept {
   unsigned int argc = ctx.argumentsLength();
   switch (type) {
     case BL_GEOMETRY_TYPE_BOXD:
@@ -548,7 +550,7 @@ njs::Result B2DUtils::unpackGeometryArg(njs::FunctionCallContext& ctx, uint32_t&
 }
 
 // ============================================================================
-// [b2djs::RuntimeWrap]
+// [bljs::RuntimeWrap]
 // ============================================================================
 
 struct RuntimeWrap {
@@ -574,7 +576,7 @@ struct RuntimeWrap {
 };
 
 // ============================================================================
-// [b2djs::ContextCookieWrap]
+// [bljs::ContextCookieWrap]
 // ============================================================================
 
 NJS_BIND_CLASS(ContextCookieWrap) {
@@ -605,7 +607,7 @@ NJS_BIND_CLASS(ContextCookieWrap) {
 };
 
 // ============================================================================
-// [b2djs::ImageWrap]
+// [bljs::ImageWrap]
 // ============================================================================
 
 NJS_BIND_CLASS(ImageWrap) {
@@ -663,7 +665,7 @@ NJS_BIND_CLASS(ImageWrap) {
 };
 
 // ============================================================================
-// [b2djs::PathWrap]
+// [bljs::PathWrap]
 // ============================================================================
 
 NJS_BIND_CLASS(PathWrap) {
@@ -1027,10 +1029,10 @@ NJS_BIND_CLASS(PathWrap) {
   }
 
   static njs::Result addGeometry(njs::FunctionCallContext& ctx, PathWrap* self, uint32_t geometryType) noexcept {
-    B2DUtils::GeometryData geometryData;
+    BLUtils::GeometryData geometryData;
     MemBufferTmp<1024> mem;
 
-    NJS_CHECK(B2DUtils::unpackGeometryArg(ctx, geometryType, geometryData, mem));
+    NJS_CHECK(BLUtils::unpackGeometryArg(ctx, geometryType, geometryData, mem));
     self->_obj.addGeometry(geometryType, &geometryData, nullptr, BL_GEOMETRY_DIRECTION_CW);
 
     return ctx.returnValue(ctx.This());
@@ -1038,7 +1040,7 @@ NJS_BIND_CLASS(PathWrap) {
 };
 
 // ============================================================================
-// [b2djs::PatternWrap]
+// [bljs::PatternWrap]
 // ============================================================================
 
 NJS_BIND_CLASS(PatternWrap) {
@@ -1134,7 +1136,7 @@ NJS_BIND_CLASS(PatternWrap) {
   static njs::Result matrixOp(njs::FunctionCallContext& ctx, PatternWrap* self, uint32_t op) noexcept {
     BLMatrix2D m;
 
-    NJS_CHECK(B2DUtils::unpackMatrixArg(ctx, op, m));
+    NJS_CHECK(BLUtils::unpackMatrixArg(ctx, op, m));
     self->_obj._applyMatrixOp(op, &m);
 
     return ctx.returnValue(ctx.This());
@@ -1142,7 +1144,7 @@ NJS_BIND_CLASS(PatternWrap) {
 };
 
 // ============================================================================
-// [b2djs::GradientWrap]
+// [bljs::GradientWrap]
 // ============================================================================
 
 NJS_BIND_CLASS(GradientWrap) {
@@ -1344,7 +1346,7 @@ NJS_BIND_CLASS(GradientWrap) {
   static njs::Result matrixOp(njs::FunctionCallContext& ctx, GradientWrap* self, uint32_t op) noexcept {
     BLMatrix2D m;
 
-    NJS_CHECK(B2DUtils::unpackMatrixArg(ctx, op, m));
+    NJS_CHECK(BLUtils::unpackMatrixArg(ctx, op, m));
     self->_obj._applyMatrixOp(op, &m);
 
     return ctx.returnValue(ctx.This());
@@ -1352,7 +1354,7 @@ NJS_BIND_CLASS(GradientWrap) {
 };
 
 // ============================================================================
-// [b2djs::FontFaceWrap]
+// [bljs::FontFaceWrap]
 // ============================================================================
 
 static njs::Result storeDesignMetrics(njs::ExecutionContext& ctx, njs::Value& dst, const BLFontDesignMetrics& dm) noexcept {
@@ -1522,7 +1524,7 @@ NJS_BIND_CLASS(FontFaceWrap) {
 };
 
 // ============================================================================
-// [b2djs::FontWrap]
+// [bljs::FontWrap]
 // ============================================================================
 
 NJS_BIND_CLASS(FontWrap) {
@@ -1535,7 +1537,7 @@ NJS_BIND_CLASS(FontWrap) {
   // --------------------------------------------------------------------------
 
   NJS_BIND_GET(face) {
-    njs::Value FontFaceClass = ctx.propertyOf(njs::Value(ctx.v8CallbackInfo().Data()), njs::Utf8Ref("FontFace"));
+    njs::Value FontFaceClass = ctx.propertyOf(ctx.data(), njs::Utf8Ref("FontFace"));
     njs::Value obj = ctx.newInstance(FontFaceClass);
 
     FontFaceWrap* wrap = ctx.unwrapUnsafe<FontFaceWrap>(obj);
@@ -1599,7 +1601,7 @@ NJS_BIND_CLASS(FontWrap) {
 };
 
 // ============================================================================
-// [b2djs::ContextWrap]
+// [bljs::ContextWrap]
 // ============================================================================
 
 NJS_BIND_CLASS(ContextWrap) {
@@ -1933,7 +1935,7 @@ NJS_BIND_CLASS(ContextWrap) {
   static njs::Result matrixOp(njs::FunctionCallContext& ctx, ContextWrap* self, uint32_t op) noexcept {
     BLMatrix2D m;
 
-    NJS_CHECK(B2DUtils::unpackMatrixArg(ctx, op, m));
+    NJS_CHECK(BLUtils::unpackMatrixArg(ctx, op, m));
     self->_obj._applyMatrixOp(op, &m);
 
     return ctx.returnValue(ctx.This());
@@ -2043,10 +2045,10 @@ NJS_BIND_CLASS(ContextWrap) {
   NJS_BIND_METHOD(fillPath     ) { return fillGeometry(ctx, self, BL_GEOMETRY_TYPE_PATH      ); }
 
   static njs::Result fillGeometry(njs::FunctionCallContext& ctx, ContextWrap* self, uint32_t geometryType) noexcept {
-    B2DUtils::GeometryData geometryData;
+    BLUtils::GeometryData geometryData;
     MemBufferTmp<1024> mem;
 
-    NJS_CHECK(B2DUtils::unpackGeometryArg(ctx, geometryType, geometryData, mem));
+    NJS_CHECK(BLUtils::unpackGeometryArg(ctx, geometryType, geometryData, mem));
     self->_obj.fillGeometry(geometryType, &geometryData);
 
     return ctx.returnValue(ctx.This());
@@ -2181,10 +2183,10 @@ NJS_BIND_CLASS(ContextWrap) {
 
 
   static njs::Result strokeGeometry(njs::FunctionCallContext& ctx, ContextWrap* self, uint32_t geometryType) noexcept {
-    B2DUtils::GeometryData geometryData;
+    BLUtils::GeometryData geometryData;
     MemBufferTmp<1024> mem;
 
-    NJS_CHECK(B2DUtils::unpackGeometryArg(ctx, geometryType, geometryData, mem));
+    NJS_CHECK(BLUtils::unpackGeometryArg(ctx, geometryType, geometryData, mem));
     self->_obj.strokeGeometry(geometryType, &geometryData);
 
     return ctx.returnValue(ctx.This());
@@ -2355,7 +2357,7 @@ struct ImageIO {
     // TODO: Doesn't check buffer, cb
     NJS_CHECK(ctx.verifyArgumentsLength(2));
 
-    njs::Value exports = njs::Value(ctx.v8CallbackInfo().Data());
+    njs::Value exports = ctx.data();
     njs::Value buffer = ctx.argumentAt(0);
     njs::Value cb = ctx.argumentAt(1);
 
@@ -2401,7 +2403,7 @@ struct ImageIO {
     if (result != BL_SUCCESS)
       return ctx.returnValue(result);
 
-    njs::Value ImageClass = ctx.propertyOf(njs::Value(ctx.v8CallbackInfo().Data()), njs::Utf8Ref("Image"));
+    njs::Value ImageClass = ctx.propertyOf(ctx.data(), njs::Utf8Ref("Image"));
     njs::Value obj = ctx.newInstance(ImageClass);
 
     ImageWrap* wrap = ctx.unwrapUnsafe<ImageWrap>(obj);
@@ -2464,7 +2466,7 @@ struct ImageIO {
       return ctx.returnValue(err);
     }
     else {
-      njs::Value ImageClass = ctx.propertyOf(njs::Value(ctx.v8CallbackInfo().Data()), njs::Utf8Ref("Image"));
+      njs::Value ImageClass = ctx.propertyOf(ctx.data(), njs::Utf8Ref("Image"));
       njs::Value obj = ctx.newInstance(ImageClass);
 
       ImageWrap* wrap = ctx.unwrapUnsafe<ImageWrap>(obj);
@@ -2516,7 +2518,7 @@ struct ImageIO {
 };
 #endif
 
-B2DJS_API NJS_MODULE(b2d) {
+NJS_MODULE(bljs) {
   typedef v8::Local<v8::FunctionTemplate> FunctionSpec;
 
   FunctionSpec ImageSpec         = NJS_INIT_CLASS(ImageWrap        , exports);
@@ -2531,11 +2533,11 @@ B2DJS_API NJS_MODULE(b2d) {
   njs::Value RuntimeObject = ctx.newObject();
   ctx.setProperty(exports, njs::Latin1Ref("Runtime"), RuntimeObject);
 
-  ctx.setProperty(RuntimeObject, njs::Latin1Ref("memoryInfo"), ctx.newFunction(RuntimeWrap::StaticEntry_memoryInfo, exports));
-  ctx.setProperty(exports, njs::Latin1Ref("decode"    ), ctx.newFunction(ImageIO::StaticEntry_decode    , exports));
-  ctx.setProperty(exports, njs::Latin1Ref("decodeSync"), ctx.newFunction(ImageIO::StaticEntry_decodeSync, exports));
-  ctx.setProperty(exports, njs::Latin1Ref("toRaw"     ), ctx.newFunction(ImageIO::StaticEntry_toRaw     , exports));
-  ctx.setProperty(exports, njs::Latin1Ref("scaleSync" ), ctx.newFunction(ImageIO::StaticEntry_scaleSync , exports));
+  ctx.setProperty(RuntimeObject, njs::Latin1Ref("memoryInfo"), ctx.newFunction(RuntimeWrap::StaticFunc_memoryInfo, exports));
+  ctx.setProperty(exports, njs::Latin1Ref("decode"    ), ctx.newFunction(ImageIO::StaticFunc_decode    , exports));
+  ctx.setProperty(exports, njs::Latin1Ref("decodeSync"), ctx.newFunction(ImageIO::StaticFunc_decodeSync, exports));
+  ctx.setProperty(exports, njs::Latin1Ref("toRaw"     ), ctx.newFunction(ImageIO::StaticFunc_toRaw     , exports));
+  ctx.setProperty(exports, njs::Latin1Ref("scaleSync" ), ctx.newFunction(ImageIO::StaticFunc_scaleSync , exports));
 }
 
-} // b2djs namespace
+} // {bljs}
