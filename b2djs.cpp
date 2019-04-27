@@ -559,15 +559,15 @@ struct RuntimeWrap {
     njs::Value obj = ctx.newObject();
     NJS_CHECK(obj);
 
-    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("vmUsed"              )), ctx.newValue(info.vmUsed)));
-    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("vmReserved"          )), ctx.newValue(info.vmReserved)));
-    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("vmOverhead"          )), ctx.newValue(info.vmOverhead)));
-    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("vmBlockCount"        )), ctx.newValue(info.vmBlockCount)));
-    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("zmUsed"              )), ctx.newValue(info.zmUsed)));
-    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("zmReserved"          )), ctx.newValue(info.zmReserved)));
-    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("zmOverhead"          )), ctx.newValue(info.zmOverhead)));
-    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("zmBlockCount"        )), ctx.newValue(info.zmBlockCount)));
-    NJS_CHECK(ctx.setProperty(obj, ctx.newInternalizedString(njs::Latin1Ref("dynamicPipelineCount")), ctx.newValue(info.dynamicPipelineCount)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("vmUsed"              ), ctx.newValue(info.vmUsed)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("vmReserved"          ), ctx.newValue(info.vmReserved)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("vmOverhead"          ), ctx.newValue(info.vmOverhead)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("vmBlockCount"        ), ctx.newValue(info.vmBlockCount)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("zmUsed"              ), ctx.newValue(info.zmUsed)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("zmReserved"          ), ctx.newValue(info.zmReserved)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("zmOverhead"          ), ctx.newValue(info.zmOverhead)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("zmBlockCount"        ), ctx.newValue(info.zmBlockCount)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("dynamicPipelineCount"), ctx.newValue(info.dynamicPipelineCount)));
 
     return ctx.returnValue(obj);
   }
@@ -1356,31 +1356,31 @@ NJS_BIND_CLASS(GradientWrap) {
 // ============================================================================
 
 static njs::Result storeDesignMetrics(njs::ExecutionContext& ctx, njs::Value& dst, const BLFontDesignMetrics& dm) noexcept {
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("ascent"                )), ctx.newValue(dm.ascent)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("descent"               )), ctx.newValue(dm.descent)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("lineGap"               )), ctx.newValue(dm.lineGap)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("xHeight"               )), ctx.newValue(dm.xHeight)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("capHeight"             )), ctx.newValue(dm.capHeight)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vAscent"               )), ctx.newValue(dm.vAscent)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vDescent"              )), ctx.newValue(dm.vDescent)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("hMinLSB"               )), ctx.newValue(dm.hMinLSB)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vMinLSB"               )), ctx.newValue(dm.vMinLSB)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("hMinTSB"               )), ctx.newValue(dm.hMinTSB)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vMinTSB"               )), ctx.newValue(dm.vMinTSB)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("hMaxAdvance"           )), ctx.newValue(dm.hMaxAdvance)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("vMaxAdvance"           )), ctx.newValue(dm.hMaxAdvance)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("underlinePosition"     )), ctx.newValue(dm.underlinePosition)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("underlineThickness"    )), ctx.newValue(dm.underlineThickness)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("strikethroughPosition" )), ctx.newValue(dm.strikethroughPosition)));
-  NJS_CHECK(ctx.setProperty(dst, ctx.newInternalizedString(njs::Latin1Ref("strikethroughThickness")), ctx.newValue(dm.strikethroughThickness)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("ascent"                ), ctx.newValue(dm.ascent)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("descent"               ), ctx.newValue(dm.descent)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("lineGap"               ), ctx.newValue(dm.lineGap)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("xHeight"               ), ctx.newValue(dm.xHeight)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("capHeight"             ), ctx.newValue(dm.capHeight)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("vAscent"               ), ctx.newValue(dm.vAscent)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("vDescent"              ), ctx.newValue(dm.vDescent)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("hMinLSB"               ), ctx.newValue(dm.hMinLSB)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("vMinLSB"               ), ctx.newValue(dm.vMinLSB)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("hMinTSB"               ), ctx.newValue(dm.hMinTSB)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("vMinTSB"               ), ctx.newValue(dm.vMinTSB)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("hMaxAdvance"           ), ctx.newValue(dm.hMaxAdvance)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("vMaxAdvance"           ), ctx.newValue(dm.hMaxAdvance)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("underlinePosition"     ), ctx.newValue(dm.underlinePosition)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("underlineThickness"    ), ctx.newValue(dm.underlineThickness)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("strikethroughPosition" ), ctx.newValue(dm.strikethroughPosition)));
+  NJS_CHECK(ctx.setProperty(dst, njs::Latin1Ref("strikethroughThickness"), ctx.newValue(dm.strikethroughThickness)));
 
   return njs::Globals::kResultOk;
 }
 
 static njs::Result storeDiagInfo(njs::ExecutionContext& ctx, njs::Value& dst, uint32_t diagFlags) noexcept {
-  #define ADD_DIAG_FLAG(NAME, FLAG)                                                   \
-    ctx.setProperty(dst,                                                              \
-                    ctx.newInternalizedString(njs::Latin1Ref(NAME)),                  \
+  #define ADD_DIAG_FLAG(NAME, FLAG)                        \
+    ctx.setProperty(dst,                                   \
+                    njs::Latin1Ref(NAME),                  \
                     ctx.newValue((diagFlags & FLAG) != 0))
 
   NJS_CHECK(ADD_DIAG_FLAG("wrongNameData", BL_FONT_FACE_DIAG_WRONG_NAME_DATA));
@@ -1563,17 +1563,17 @@ NJS_BIND_CLASS(FontWrap) {
 
     njs::Value mObj = ctx.newObject();
     NJS_CHECK(mObj);
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("ascent"                )), ctx.newValue(m.ascent)));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("descent"               )), ctx.newValue(m.descent)));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("lineGap"               )), ctx.newValue(m.lineGap)));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("xHeight"               )), ctx.newValue(m.xHeight)));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("capHeight"             )), ctx.newValue(m.capHeight)));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("vAscent"               )), ctx.newValue(m.vAscent)));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("vDescent"              )), ctx.newValue(m.vDescent)));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("underlinePosition"     )), ctx.newValue(m.underlinePosition)));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("underlineThickness"    )), ctx.newValue(m.underlineThickness)));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("strikethroughPosition" )), ctx.newValue(m.strikethroughPosition)));
-    NJS_CHECK(ctx.setProperty(mObj, ctx.newInternalizedString(njs::Latin1Ref("strikethroughThickness")), ctx.newValue(m.strikethroughThickness)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("ascent"                ), ctx.newValue(m.ascent)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("descent"               ), ctx.newValue(m.descent)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("lineGap"               ), ctx.newValue(m.lineGap)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("xHeight"               ), ctx.newValue(m.xHeight)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("capHeight"             ), ctx.newValue(m.capHeight)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("vAscent"               ), ctx.newValue(m.vAscent)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("vDescent"              ), ctx.newValue(m.vDescent)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("underlinePosition"     ), ctx.newValue(m.underlinePosition)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("underlineThickness"    ), ctx.newValue(m.underlineThickness)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("strikethroughPosition" ), ctx.newValue(m.strikethroughPosition)));
+    NJS_CHECK(ctx.setProperty(mObj, njs::Latin1Ref("strikethroughThickness"), ctx.newValue(m.strikethroughThickness)));
 
     return ctx.returnValue(mObj);
   }
@@ -2529,14 +2529,13 @@ B2DJS_API NJS_MODULE(b2d) {
   FunctionSpec ContextCookieSpec = NJS_INIT_CLASS(ContextCookieWrap, exports);
 
   njs::Value RuntimeObject = ctx.newObject();
-  ctx.setProperty(exports, ctx.newInternalizedString(njs::Latin1Ref("Runtime")), RuntimeObject);
+  ctx.setProperty(exports, njs::Latin1Ref("Runtime"), RuntimeObject);
 
-  RuntimeObject.v8HandleAs<v8::Object>()->Set(ctx.newInternalizedString(njs::Latin1Ref("memoryInfo")).v8Handle(), v8::FunctionTemplate::New(ctx.v8Isolate(), RuntimeWrap::StaticEntry_memoryInfo, exports.v8Handle())->GetFunction());
-
-  exports.v8HandleAs<v8::Object>()->Set(ctx.newInternalizedString(njs::Latin1Ref("decode"    )).v8Handle(), v8::FunctionTemplate::New(ctx.v8Isolate(), ImageIO::StaticEntry_decode    , exports.v8Handle())->GetFunction());
-  exports.v8HandleAs<v8::Object>()->Set(ctx.newInternalizedString(njs::Latin1Ref("decodeSync")).v8Handle(), v8::FunctionTemplate::New(ctx.v8Isolate(), ImageIO::StaticEntry_decodeSync, exports.v8Handle())->GetFunction());
-  exports.v8HandleAs<v8::Object>()->Set(ctx.newInternalizedString(njs::Latin1Ref("toRaw"     )).v8Handle(), v8::FunctionTemplate::New(ctx.v8Isolate(), ImageIO::StaticEntry_toRaw     , exports.v8Handle())->GetFunction());
-  exports.v8HandleAs<v8::Object>()->Set(ctx.newInternalizedString(njs::Latin1Ref("scaleSync" )).v8Handle(), v8::FunctionTemplate::New(ctx.v8Isolate(), ImageIO::StaticEntry_scaleSync , exports.v8Handle())->GetFunction());
+  ctx.setProperty(RuntimeObject, njs::Latin1Ref("memoryInfo"), ctx.newFunction(RuntimeWrap::StaticEntry_memoryInfo, exports));
+  ctx.setProperty(exports, njs::Latin1Ref("decode"    ), ctx.newFunction(ImageIO::StaticEntry_decode    , exports));
+  ctx.setProperty(exports, njs::Latin1Ref("decodeSync"), ctx.newFunction(ImageIO::StaticEntry_decodeSync, exports));
+  ctx.setProperty(exports, njs::Latin1Ref("toRaw"     ), ctx.newFunction(ImageIO::StaticEntry_toRaw     , exports));
+  ctx.setProperty(exports, njs::Latin1Ref("scaleSync" ), ctx.newFunction(ImageIO::StaticEntry_scaleSync , exports));
 }
 
 } // b2djs namespace
