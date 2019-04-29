@@ -24,4 +24,4 @@ Wrapped Classes
 Building
 --------
 
-These bindings require Blend2D library to be installed and available (including public Blend2D C++ headers). NJS-API that is used to create bindings should be installed by using `npm install` as it's specified in package dependencies.
+These bindings require Blend2D library to be installed and available including public Blend2D C++ headers. NJS-API that is used to create bindings should be installed by using `npm install` as it's specified in package dependencies.

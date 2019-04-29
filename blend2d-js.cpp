@@ -576,37 +576,6 @@ struct RuntimeWrap {
 };
 
 // ============================================================================
-// [bljs::ContextCookieWrap]
-// ============================================================================
-
-NJS_BIND_CLASS(ContextCookieWrap) {
-  NJS_BIND_CONSTRUCTOR() {
-    unsigned int argc = ctx.argumentsLength();
-    if (argc == 1) {
-      ContextCookieWrap* cookie;
-      NJS_CHECK(ctx.unwrapArgument<ContextCookieWrap>(0, &cookie));
-      return ctx.returnNew<ContextCookieWrap>(cookie->_obj);
-    }
-    else {
-      return ctx.returnNew<ContextCookieWrap>();
-    }
-  }
-
-  // --------------------------------------------------------------------------
-  // [Accessors]
-  // --------------------------------------------------------------------------
-
-  NJS_BIND_METHOD(empty) {
-    return ctx.returnValue(self->_obj.empty());
-  }
-
-  NJS_BIND_METHOD(reset) {
-    self->_obj.reset();
-    return ctx.returnValue(ctx.This());
-  }
-};
-
-// ============================================================================
 // [bljs::ImageWrap]
 // ============================================================================
 
@@ -1601,6 +1570,37 @@ NJS_BIND_CLASS(FontWrap) {
 };
 
 // ============================================================================
+// [bljs::ContextCookieWrap]
+// ============================================================================
+
+NJS_BIND_CLASS(ContextCookieWrap) {
+  NJS_BIND_CONSTRUCTOR() {
+    unsigned int argc = ctx.argumentsLength();
+    if (argc == 1) {
+      ContextCookieWrap* cookie;
+      NJS_CHECK(ctx.unwrapArgument<ContextCookieWrap>(0, &cookie));
+      return ctx.returnNew<ContextCookieWrap>(cookie->_obj);
+    }
+    else {
+      return ctx.returnNew<ContextCookieWrap>();
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // [Accessors]
+  // --------------------------------------------------------------------------
+
+  NJS_BIND_METHOD(empty) {
+    return ctx.returnValue(self->_obj.empty());
+  }
+
+  NJS_BIND_METHOD(reset) {
+    self->_obj.reset();
+    return ctx.returnValue(ctx.This());
+  }
+};
+
+// ============================================================================
 // [bljs::ContextWrap]
 // ============================================================================
 
@@ -2299,7 +2299,7 @@ struct DecodeAsyncTask : public njs::Task {
 
   virtual void onWork() noexcept {
     BLImageCodec codec;
-    _error = codec.findByData(BLImageCodec::builtInCodecs(), _inputData.data(), _inputData.size());
+    _error = codec.findByData(_inputData.data(), _inputData.size());
     if (_error != BL_SUCCESS)
       return;
 
@@ -2389,7 +2389,7 @@ struct ImageIO {
     const uint8_t* data = static_cast<const uint8_t*>(njs::Node::bufferData(buffer));
 
     BLImageCodec codec;
-    BLResult result = codec.findByData(BLImageCodec::builtInCodecs(), data, size);
+    BLResult result = codec.findByData(data, size);
     if (result != BL_SUCCESS)
       return ctx.returnValue(result);
 

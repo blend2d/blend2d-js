@@ -22,20 +22,6 @@ struct Module {
 };
 
 // ============================================================================
-// [bljs::ContextCookieWrap]
-// ============================================================================
-
-struct ContextCookieWrap {
-  NJS_BASE_CLASS(ContextCookieWrap, "Cookie", Module::kBaseTag + 0)
-
-  NJS_INLINE ContextCookieWrap() noexcept : _obj() {}
-  NJS_INLINE ContextCookieWrap(const BLContextCookie& other) noexcept : _obj(other) {}
-  NJS_INLINE ~ContextCookieWrap() noexcept {}
-
-  BLContextCookie _obj;
-};
-
-// ============================================================================
 // [bljs::ImageWrap]
 // ============================================================================
 
@@ -119,6 +105,20 @@ struct FontWrap {
   NJS_INLINE ~FontWrap() noexcept {}
 
   BLFont _obj;
+};
+
+// ============================================================================
+// [bljs::ContextCookieWrap]
+// ============================================================================
+
+struct ContextCookieWrap {
+  NJS_BASE_CLASS(ContextCookieWrap, "Cookie", Module::kBaseTag + 0)
+
+  NJS_INLINE ContextCookieWrap() noexcept : _obj() {}
+  NJS_INLINE ContextCookieWrap(const BLContextCookie& other) noexcept : _obj(other) {}
+  NJS_INLINE ~ContextCookieWrap() noexcept {}
+
+  BLContextCookie _obj;
 };
 
 // ============================================================================
