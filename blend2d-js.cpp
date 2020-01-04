@@ -631,6 +631,32 @@ NJS_BIND_CLASS(ImageWrap) {
   NJS_BIND_METHOD(empty) {
     return ctx.returnValue(self->_obj.empty());
   }
+
+  // --------------------------------------------------------------------------
+  // [Methods]
+  // --------------------------------------------------------------------------
+
+  NJS_BIND_METHOD(convert) {
+    uint32_t format;
+
+    NJS_CHECK(ctx.verifyArgumentsLength(1));
+    NJS_CHECK(ctx.unpackArgument(0, format, Enum_Format));
+
+    if (format == BL_FORMAT_NONE)
+      return ctx.invalidArgumentCustom(0, "Pixel format cannot be 'none'");
+
+    BLImage copy = self->_obj;
+    BLResult result = copy.convert(format);
+
+    // TODO: Throw exception if `result != BL_SUCCESS`.
+
+    njs::Value ImageClass = ctx.propertyOf(ctx.data(), njs::Utf8Ref("Image"));
+    njs::Value output = ctx.newInstance(ImageClass);
+
+    ImageWrap* wrap = ctx.unwrapUnsafe<ImageWrap>(output);
+    wrap->_obj.assign(copy);
+    return ctx.returnValue(output);
+  }
 };
 
 // ============================================================================
@@ -2482,14 +2508,21 @@ struct ImageIO {
     NJS_CHECK(ctx.unwrapArgument(0, &image));
 
     BLPixelConverter pc;
-    BLFormatInfo srcFmt {};
+    BLFormatInfo srcFmt = blFormatInfo[image->_obj.format()];
+    BLFormatInfo dstFmt {};
 
-    srcFmt.flags |= BL_FORMAT_FLAG_RGBA | BL_FORMAT_FLAG_PREMULTIPLIED;
-    srcFmt.depth = 32;
-    srcFmt.setSizes(8, 8, 8, 8);
-    srcFmt.setShifts(0, 8, 16, 24);
+    dstFmt.flags |= BL_FORMAT_FLAG_RGBA | BL_FORMAT_FLAG_PREMULTIPLIED;
+    dstFmt.depth = 32;
+    dstFmt.setSizes(8, 8, 8, 8);
+    dstFmt.setShifts(0, 8, 16, 24);
 
-    BLResult err = pc.create(blFormatInfo[image->_obj.format()], srcFmt);
+    if (image->_obj.format() == BL_FORMAT_A8) {
+      srcFmt.flags = BL_FORMAT_FLAG_LUM;
+      srcFmt.setSizes(8, 8, 8, 0);
+      srcFmt.setShifts(0, 0, 0, 0);
+    }
+
+    BLResult err = pc.create(dstFmt, srcFmt);
     if (err)
       return ctx.returnValue(ctx.undefined());
 
