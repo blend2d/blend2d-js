@@ -48,6 +48,7 @@ NJS_ENUM(Enum_CompOp, 0, BL_COMP_OP_COUNT - 1,
   "clear\0"
   "plus\0"
   "minus\0"
+  "modulate\0"
   "multiply\0"
   "screen\0"
   "overlay\0"
@@ -403,7 +404,7 @@ L_UnpackXY:
       if (argc == 3) {
         NJS_CHECK(ctx.unpackArgument(1, m.m[1]));
         NJS_CHECK(ctx.unpackArgument(2, m.m[2]));
-        op += (BL_MATRIX2D_OP_POST_ROTATE - BL_MATRIX2D_OP_ROTATE);
+        op++;
       }
 
       return njs::Globals::kResultOk;
@@ -2130,10 +2131,10 @@ NJS_BIND_CLASS(ContextWrap) {
 
     if (count) {
       MemBufferTmp<1024> buf;
-      void* p = buf.alloc(count * (sizeof(BLPoint) + sizeof(BLGlyphId)));
+      void* p = buf.alloc(count * (sizeof(BLPoint) + sizeof(uint32_t)));
       if (p) {
         BLPoint* tmpOffsets = static_cast<BLPoint*>(p);
-        BLGlyphId* tmpGlyphs = reinterpret_cast<BLGlyphId*>(tmpOffsets + count);
+        uint32_t* tmpGlyphs = reinterpret_cast<uint32_t*>(tmpOffsets + count);
 
         if (posIsRawArray) {
           for (size_t i = 0, posIndex = 0; i < count; i++, posIndex += 2) {
@@ -2144,11 +2145,7 @@ NJS_BIND_CLASS(ContextWrap) {
             if (!gVal.isUint32() || !xVal.isNumber() || !yVal.isNumber())
               return ctx.invalidArgument();
 
-            uint32_t glyphId = ctx.uint32Value(gVal);
-            if (glyphId > 65535)
-              return ctx.invalidArgument();
-
-            tmpGlyphs[i] = BLGlyphId(glyphId);
+            tmpGlyphs[i] = ctx.uint32Value(gVal);
             tmpOffsets[i].reset(ctx.doubleValue(xVal), ctx.doubleValue(yVal));
           }
         }
@@ -2167,20 +2164,17 @@ NJS_BIND_CLASS(ContextWrap) {
             njs::Value xVal = ctx.propertyOf(pVal, xStr);
             njs::Value yVal = ctx.propertyOf(pVal, yStr);
 
-            if (glyphId > 65535 || !xVal.isNumber() || !yVal.isNumber())
-              return ctx.invalidArgument();
-
-            tmpGlyphs[i] = BLGlyphId(glyphId);
+            tmpGlyphs[i] = glyphId;
             tmpOffsets[i].reset(ctx.doubleValue(xVal), ctx.doubleValue(yVal));
           }
         }
 
         BLGlyphRun gr {};
-        gr.glyphIdData = tmpGlyphs;
+        gr.glyphData = tmpGlyphs;
         gr.placementData = tmpOffsets;
         gr.size = count;
-        gr.glyphIdSize = 2;
-        gr.glyphIdAdvance = int8_t(sizeof(BLGlyphId));
+        gr.glyphSize = 4;
+        gr.glyphAdvance = int8_t(sizeof(uint32_t));
         gr.placementAdvance = int8_t(sizeof(BLPoint));
         gr.placementType = BL_GLYPH_PLACEMENT_TYPE_USER_UNITS;
         self->_obj.fillGlyphRun(BLPoint(x, y), font->_obj, gr);
