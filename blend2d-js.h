@@ -130,6 +130,7 @@ struct ContextWrap {
 
   NJS_INLINE ContextWrap() noexcept {}
   NJS_INLINE explicit ContextWrap(BLImage& obj) noexcept : _obj(obj) {}
+  NJS_INLINE explicit ContextWrap(BLImage& obj, const BLContextCreateInfo& createInfo) noexcept : _obj(obj, createInfo) {}
   NJS_INLINE ~ContextWrap() noexcept {}
 
   BLContext _obj;

@@ -983,6 +983,19 @@ NJS_BIND_CLASS(PathWrap) {
     return ctx.returnValue(ctx.This());
   }
 
+  NJS_BIND_METHOD(removeRange) {
+    unsigned int argc = ctx.argumentsLength();
+    if (argc != 2)
+      return ctx.invalidArgumentsLength();
+
+    size_t start, n;
+    NJS_CHECK(ctx.unpackArgument(0, start));
+    NJS_CHECK(ctx.unpackArgument(1, n));
+    self->_obj.removeRange(BLRange(start, n));
+
+    return ctx.returnValue(ctx.This());
+  }
+
   // --------------------------------------------------------------------------
   // [Close]
   // --------------------------------------------------------------------------
@@ -1631,15 +1644,29 @@ NJS_BIND_CLASS(ContextCookieWrap) {
 // [bljs::ContextWrap]
 // ============================================================================
 
+static njs::Result unpackCreateInfo(njs::Context& ctx, BLContextCreateInfo& dst, const njs::Value& src) noexcept {
+  njs::Value threadCount = ctx.propertyOf(src, njs::Latin1Ref("threadCount"));
+
+  if (threadCount.isUint32())
+    dst.threadCount = ctx.uint32Value(threadCount);
+
+  return njs::Globals::kResultOk;
+}
+
 NJS_BIND_CLASS(ContextWrap) {
   NJS_BIND_CONSTRUCTOR() {
-    NJS_CHECK(ctx.verifyArgumentsLength(0, 1));
+    NJS_CHECK(ctx.verifyArgumentsLength(0, 2));
     unsigned int argc = ctx.argumentsLength();
 
-    if (argc == 1) {
+    if (argc >= 1) {
       ImageWrap* image;
+      BLContextCreateInfo ci {};
+
       NJS_CHECK(ctx.unwrapArgument<ImageWrap>(0, &image));
-      return ctx.returnNew<ContextWrap>(image->_obj);
+      if (argc == 2)
+        NJS_CHECK(unpackCreateInfo(ctx, ci, ctx.argumentAt(1)));
+
+      return ctx.returnNew<ContextWrap>(image->_obj, ci);
     }
     else {
       return ctx.returnNew<ContextWrap>();
@@ -1671,12 +1698,17 @@ NJS_BIND_CLASS(ContextWrap) {
   // --------------------------------------------------------------------------
 
   NJS_BIND_METHOD(begin) {
-    NJS_CHECK(ctx.verifyArgumentsLength(1));
+    NJS_CHECK(ctx.verifyArgumentsLength(1, 2));
+    unsigned int argc = ctx.argumentsLength();
 
     ImageWrap* image;
-    NJS_CHECK(ctx.unwrapArgument<ImageWrap>(0, &image));
+    BLContextCreateInfo ci {};
 
-    self->_obj.begin(image->_obj);
+    NJS_CHECK(ctx.unwrapArgument<ImageWrap>(0, &image));
+    if (argc == 2)
+      NJS_CHECK(unpackCreateInfo(ctx, ci, ctx.argumentAt(1)));
+
+    self->_obj.begin(image->_obj, ci);
     return ctx.returnValue(ctx.This());
   }
 
