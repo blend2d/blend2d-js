@@ -555,9 +555,9 @@ njs::Result BLUtils::unpackGeometryArg(njs::FunctionCallContext& ctx, uint32_t& 
 // ============================================================================
 
 struct RuntimeWrap {
-  NJS_BIND_STATIC(memoryInfo) {
-    BLRuntimeMemoryInfo info;
-    blRuntimeQueryInfo(BL_RUNTIME_INFO_TYPE_MEMORY, &info);
+  NJS_BIND_STATIC(resourceInfo) {
+    BLRuntimeResourceInfo info;
+    blRuntimeQueryInfo(BL_RUNTIME_INFO_TYPE_RESOURCE, &info);
 
     njs::Value obj = ctx.newObject();
     NJS_CHECK(obj);
@@ -571,6 +571,8 @@ struct RuntimeWrap {
     NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("zmOverhead"          ), ctx.newValue(info.zmOverhead)));
     NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("zmBlockCount"        ), ctx.newValue(info.zmBlockCount)));
     NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("dynamicPipelineCount"), ctx.newValue(info.dynamicPipelineCount)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("fileHandleCount"     ), ctx.newValue(info.fileHandleCount)));
+    NJS_CHECK(ctx.setProperty(obj, njs::Latin1Ref("fileMappingCount"    ), ctx.newValue(info.fileMappingCount)));
 
     return ctx.returnValue(obj);
   }
@@ -2592,7 +2594,7 @@ NJS_MODULE(bljs) {
   njs::Value RuntimeObject = ctx.newObject();
   ctx.setProperty(exports, njs::Latin1Ref("Runtime"), RuntimeObject);
 
-  ctx.setProperty(RuntimeObject, njs::Latin1Ref("memoryInfo"), ctx.newFunction(RuntimeWrap::StaticFunc_memoryInfo, exports));
+  ctx.setProperty(RuntimeObject, njs::Latin1Ref("resourceInfo"), ctx.newFunction(RuntimeWrap::StaticFunc_resourceInfo, exports));
   ctx.setProperty(exports, njs::Latin1Ref("decode"    ), ctx.newFunction(ImageIO::StaticFunc_decode    , exports));
   ctx.setProperty(exports, njs::Latin1Ref("decodeSync"), ctx.newFunction(ImageIO::StaticFunc_decodeSync, exports));
   ctx.setProperty(exports, njs::Latin1Ref("toRaw"     ), ctx.newFunction(ImageIO::StaticFunc_toRaw     , exports));
